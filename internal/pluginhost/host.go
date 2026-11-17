@@ -264,6 +264,10 @@ func (h *Host) ApplyConfig(ctx context.Context, cfg *config.Config) {
 		}
 		h.mu.Lock()
 		lp := h.loaded[file.ID]
+		var previousPlugin pluginapi.Plugin
+		if lp != nil {
+			previousPlugin = lp.plugin
+		}
 		var replaced *loadedPlugin
 		if lp != nil && cleanPluginPath(lp.path) != cleanPluginPath(file.Path) {
 			replaced = lp
@@ -271,7 +275,7 @@ func (h *Host) ApplyConfig(ctx context.Context, cfg *config.Config) {
 		}
 		_, disabled := h.fused[file.ID]
 		h.mu.Unlock()
-		if disabled && replaced == nil {
+		if disabled && replaced == nil && previousPlugin.Capabilities.AuthCandidateFilter == nil {
 			continue
 		}
 
@@ -279,6 +283,10 @@ func (h *Host) ApplyConfig(ctx context.Context, cfg *config.Config) {
 		var hotReloadFields log.Fields
 		var plugin pluginapi.Plugin
 		registeredNow := false
+		if disabled && replaced == nil {
+			// Keep fused access filters visible so requests continue to fail closed.
+			plugin, registeredNow = previousPlugin, true
+		}
 		if lp == nil {
 			request := &pluginLoadRequest{result: make(chan pluginLoadResult, 1)}
 			h.mu.Lock()
@@ -367,7 +375,11 @@ func (h *Host) ApplyConfig(ctx context.Context, cfg *config.Config) {
 			var okCall bool
 			plugin, okCall = h.callRegister(ctx, lp, item)
 			if !okCall {
-				continue
+				if previousPlugin.Capabilities.AuthCandidateFilter == nil {
+					continue
+				}
+				// A failed reconfiguration must not remove an existing access policy.
+				plugin = previousPlugin
 			}
 		}
 		plugin.Metadata = clonePluginMetadata(plugin.Metadata)
@@ -1201,6 +1213,8 @@ func validPlugin(plugin pluginapi.Plugin) bool {
 		caps.AuthProvider != nil ||
 		caps.FrontendAuthProvider != nil ||
 		caps.Scheduler != nil ||
+		caps.SessionAffinityGate != nil ||
+		caps.AuthCandidateFilter != nil ||
 		caps.ModelRouter != nil ||
 		caps.Executor != nil ||
 		caps.RequestTranslator != nil ||

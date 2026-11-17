@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Session 与额度调度</title>
+<style>__DASHBOARD_STYLE__</style>
+<script>__THEME_SCRIPT__</script>
+</head>
+<body>
+<main>
+<header class="top page-heading"><div><div class="eyebrow">SESSION &amp; QUOTA CONTROL <span>0.7.0</span></div><h1>Session 与额度调度</h1><p>管理会话分配、Credential 检测与等待策略、访问控制、请求用量和 Hub 渠道。</p></div><span class="connection" id="connection" role="status">正在连接</span></header>
+<div id="authRecovery" class="notice" hidden><div class="auth"><span id="authStatus"></span><a href="/management.html" target="_blank" rel="noopener noreferrer">打开主管理界面</a><button id="reconnect" class="secondary">重新连接</button></div><details id="manualAuth" hidden><summary>使用 Management Key 连接</summary><div class="auth"><input id="key" type="password" autocomplete="off" placeholder="主项目的 Management Key" aria-label="Management Key"><button id="connect">连接</button></div></details></div>
+<div id="message" class="error" role="status"></div>
+<nav class="view-tabs" role="tablist" aria-label="插件功能"><button id="dashboardTab" type="button" role="tab" aria-controls="dashboardPanel" aria-selected="true"><span class="tab-icon" aria-hidden="true">⌘</span>会话调度</button><button id="credentialsTab" type="button" role="tab" aria-controls="credentialsPanel" aria-selected="false" tabindex="-1"><span class="tab-icon" aria-hidden="true">▤</span>Credential 管理</button><button id="accessTab" type="button" role="tab" aria-controls="accessPanel" aria-selected="false" tabindex="-1"><span class="tab-icon" aria-hidden="true">◇</span>访问控制</button><button id="usageTab" type="button" role="tab" aria-controls="usagePanel" aria-selected="false" tabindex="-1"><span class="tab-icon" aria-hidden="true">▥</span>用量统计与请求记录</button><button id="hubTab" type="button" role="tab" aria-controls="hubPanel" aria-selected="false" tabindex="-1"><span class="tab-icon" aria-hidden="true">◎</span>Hub</button></nav>
+<section id="dashboardPanel" role="tabpanel" aria-labelledby="dashboardTab">__SCHEDULING_CONTENT__</section>
+<section id="credentialsPanel" role="tabpanel" aria-labelledby="credentialsTab" hidden>__CREDENTIALS_CONTENT__</section>
+<section id="accessPanel" role="tabpanel" aria-labelledby="accessTab" hidden>__ACCESS_CONTENT__</section>
+<section id="usagePanel" role="tabpanel" aria-labelledby="usageTab" hidden>__USAGE_CONTENT__</section>
+<section id="hubPanel" role="tabpanel" aria-labelledby="hubTab" hidden>__HUB_CONTENT__</section>
+</main>
+__EVALUATIONS_CONTENT__
+<script>__MANAGEMENT_AUTH__</script>
+<script>__EVALUATIONS_SCRIPT__</script>
+<script>__SCHEDULING_SCRIPT__</script>
+<script>__CREDENTIALS_SCRIPT__</script>
+<script>__ACCESS_SCRIPT__</script>
+<script>__USAGE_SCRIPT__</script>
+<script>__HUB_SCRIPT__</script>
+<script>__APP_SCRIPT__</script>
+</body>
+</html>

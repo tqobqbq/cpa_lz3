@@ -173,6 +173,8 @@ func (h *Host) callFromPlugin(ctx context.Context, method string, request []byte
 		return h.callHostLog(ctx, request)
 	case pluginabi.MethodHostAuthList:
 		return h.callHostAuthList(ctx, request)
+	case pluginabi.MethodHostAPIKeysList:
+		return h.callHostAPIKeysList()
 	case pluginabi.MethodHostAuthGet:
 		return h.callHostAuthGet(ctx, request)
 	case pluginabi.MethodHostAuthGetRuntime:
@@ -181,6 +183,10 @@ func (h *Host) callFromPlugin(ctx context.Context, method string, request []byte
 		return h.callHostAuthSave(ctx, request)
 	case pluginabi.MethodHostAffinityLookup:
 		return h.callHostAffinityLookup(ctx, request)
+	case pluginabi.MethodHostContextWait:
+		return h.callHostContextWait(ctx, request)
+	case pluginabi.MethodHostAuthQuota:
+		return h.callHostAuthQuota(ctx, request)
 	case pluginabi.MethodHostRoutingResetCooldown:
 		return h.callHostRoutingResetCooldown(ctx, request)
 	default:

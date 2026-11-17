@@ -118,6 +118,12 @@ func registerRPCPlugin(ctx context.Context, host *Host, id string, client plugin
 		plugin.Capabilities.Scheduler = adapter
 		plugin.Capabilities.SchedulerAcrossPriorities = resp.Capabilities.SchedulerAcrossPriorities
 	}
+	if resp.Capabilities.SessionAffinityGate {
+		plugin.Capabilities.SessionAffinityGate = adapter
+	}
+	if resp.Capabilities.AuthCandidateFilter {
+		plugin.Capabilities.AuthCandidateFilter = adapter
+	}
 	if resp.Capabilities.ModelRouter {
 		plugin.Capabilities.ModelRouter = adapter
 	}
@@ -423,6 +429,19 @@ func (a *rpcPluginAdapter) Pick(ctx context.Context, req pluginapi.SchedulerPick
 	return callPlugin[pluginapi.SchedulerPickResponse](ctx, a.client, pluginabi.MethodSchedulerPick, req)
 }
 
+func (a *rpcPluginAdapter) FilterAuthCandidates(ctx context.Context, req pluginapi.AuthCandidateFilterRequest) (pluginapi.AuthCandidateFilterResponse, error) {
+	return callPlugin[pluginapi.AuthCandidateFilterResponse](ctx, a.client, pluginabi.MethodAuthCandidatesFilter, req)
+}
+
+func (a *rpcPluginAdapter) AwaitSessionAffinity(ctx context.Context, req pluginapi.SessionAffinityRequest) (pluginapi.SessionAffinityResponse, error) {
+	callbackID, closeCallback := a.openHostCallbackContext(ctx)
+	defer closeCallback()
+	return callPlugin[pluginapi.SessionAffinityResponse](ctx, a.client, pluginabi.MethodSessionAffinityAwait, rpcSessionAffinityRequest{
+		SessionAffinityRequest: req,
+		HostCallbackID:         callbackID,
+	})
+}
+
 func (a *rpcPluginAdapter) RouteModel(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 	callbackID, closeCallback := a.openHostCallbackContext(ctx)
 	defer closeCallback()
@@ -631,7 +650,12 @@ func (a *rpcPluginAdapter) RegisterManagement(ctx context.Context, req pluginapi
 		route.Handler = a
 		resources = append(resources, route)
 	}
-	return pluginapi.ManagementRegistrationResponse{Routes: routes, Resources: resources}, nil
+	extensions := make([]pluginapi.ManagementRoute, 0, len(resp.ExtensionRoutes))
+	for _, route := range resp.ExtensionRoutes {
+		route.Handler = a
+		extensions = append(extensions, route)
+	}
+	return pluginapi.ManagementRegistrationResponse{Routes: routes, Resources: resources, ExtensionRoutes: extensions}, nil
 }
 
 func (a *rpcPluginAdapter) HandleManagement(ctx context.Context, req pluginapi.ManagementRequest) (pluginapi.ManagementResponse, error) {

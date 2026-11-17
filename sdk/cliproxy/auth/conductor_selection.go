@@ -80,6 +80,7 @@ type authSelectionEligibility struct {
 	requiredKind     string
 	credentialPolicy string
 	disallowFreeAuth bool
+	deniedAuthIDs    map[string]string
 }
 
 func withRequiredAuthKind(ctx context.Context, requiredKind string) context.Context {
@@ -103,12 +104,16 @@ func authSelectionEligibilityForRequest(ctx context.Context, opts cliproxyexecut
 	if ctx != nil {
 		eligibility.requiredKind, _ = ctx.Value(requiredAuthKindContextKey{}).(string)
 		eligibility.credentialPolicy, _ = ctx.Value(credentialPolicyContextKey{}).(string)
+		eligibility.deniedAuthIDs, _ = ctx.Value(authCandidateFilterContextKey{}).(map[string]string)
 	}
 	return eligibility
 }
 
 func (e authSelectionEligibility) allows(auth *Auth) bool {
 	if auth == nil {
+		return false
+	}
+	if _, denied := e.deniedAuthIDs[auth.ID]; denied {
 		return false
 	}
 	if e.requiredKind != "" && auth.AuthKind() != e.requiredKind {
@@ -463,10 +468,7 @@ func (m *Manager) LookupSessionAffinity(provider, model, sessionID string) (*Aut
 		return nil, "unsupported"
 	}
 	m.mu.RLock()
-	if m.pluginScheduler != nil {
-		m.mu.RUnlock()
-		return nil, "unsupported"
-	}
+	pluginScheduler := m.pluginScheduler
 	sel := m.selector
 	authProviderMap := make(map[string]string, len(m.auths))
 	for id, a := range m.auths {
@@ -475,6 +477,12 @@ func (m *Manager) LookupSessionAffinity(provider, model, sessionID string) (*Aut
 		}
 	}
 	m.mu.RUnlock()
+	if pluginScheduler != nil {
+		state, reportsState := pluginScheduler.(pluginSchedulerState)
+		if !reportsState || state.HasScheduler() {
+			return nil, "unsupported"
+		}
+	}
 
 	if sel == nil {
 		return nil, "unsupported"
@@ -884,8 +892,13 @@ func schedulerAuthCandidates(auths []*Auth) []pluginapi.SchedulerAuthCandidate {
 		if auth == nil {
 			continue
 		}
+		index := auth.Index
+		if index == "" {
+			index = auth.Clone().EnsureIndex()
+		}
 		out = append(out, pluginapi.SchedulerAuthCandidate{
 			ID:         auth.ID,
+			AuthIndex:  index,
 			Provider:   strings.ToLower(strings.TrimSpace(auth.Provider)),
 			Priority:   authPriority(auth),
 			Status:     string(auth.Status),
@@ -1815,6 +1828,11 @@ func (m *Manager) pickNextLegacy(ctx context.Context, provider, model string, op
 		auth, exec, _, err := m.pickNextViaHome(ctx, model, opts, tried)
 		return auth, exec, err
 	}
+	var errFilter error
+	ctx, errFilter = m.filterSelectionContext(ctx, []string{provider}, model, opts)
+	if errFilter != nil {
+		return nil, nil, errFilter
+	}
 
 	opts.EnsureMetadata()
 	opts.Metadata[cliproxyexecutor.SessionAffinityProviderMetadataKey] = provider
@@ -1891,6 +1909,7 @@ func (m *Manager) pickNextLegacy(ctx context.Context, provider, model string, op
 	if !handled {
 		selectorCtx := selectorContextForAvailableAuths(ctx, selector, model)
 		selectorCtx = withSessionAffinityTransientAuthIDs(selectorCtx, transientAuthIDs)
+		selectorCtx = withSessionAdmission(selectorCtx, pluginScheduler, m, model, len(tried) > 0)
 		selected, errPick = selector.Pick(selectorCtx, provider, selectionArgForSelector(selector, model), opts, selectorAuths)
 		if errPick != nil {
 			if isBuiltInSelector(selector) {
@@ -2089,7 +2108,7 @@ func (m *Manager) pickNext(ctx context.Context, provider, model string, opts cli
 	opts.Metadata[cliproxyexecutor.SessionAffinityProviderMetadataKey] = provider
 	opts.Metadata[cliproxyexecutor.SessionAffinityModelMetadataKey] = model
 
-	if m.hasPluginScheduler() || !m.useSchedulerFastPath() {
+	if m.hasPluginScheduler() || m.authCandidateFilter() != nil || !m.useSchedulerFastPath() {
 		return m.pickNextLegacy(ctx, provider, model, opts, tried)
 	}
 	eligibility := authSelectionEligibilityForRequest(ctx, opts)
@@ -2144,6 +2163,11 @@ func (m *Manager) pickNext(ctx context.Context, provider, model string, opts cli
 func (m *Manager) pickNextMixedLegacy(ctx context.Context, providers []string, model string, opts cliproxyexecutor.Options, tried map[string]struct{}) (*Auth, ProviderExecutor, string, error) {
 	if m.HomeEnabled() {
 		return m.pickNextViaHome(ctx, model, opts, tried)
+	}
+	var errFilter error
+	ctx, errFilter = m.filterSelectionContext(ctx, providers, model, opts)
+	if errFilter != nil {
+		return nil, nil, "", errFilter
 	}
 
 	opts.EnsureMetadata()
@@ -2237,6 +2261,7 @@ func (m *Manager) pickNextMixedLegacy(ctx context.Context, providers []string, m
 	if !handled {
 		selectorCtx := selectorContextForAvailableAuths(ctx, selector, model)
 		selectorCtx = withSessionAffinityTransientAuthIDs(selectorCtx, transientAuthIDs)
+		selectorCtx = withSessionAdmission(selectorCtx, pluginScheduler, m, model, len(tried) > 0)
 		selected, errPick = selector.Pick(selectorCtx, "mixed", selectionArgForSelector(selector, model), opts, selectorAuths)
 		if errPick != nil {
 			if isBuiltInSelector(selector) {
@@ -2274,7 +2299,7 @@ func (m *Manager) pickNextMixed(ctx context.Context, providers []string, model s
 	opts.Metadata[cliproxyexecutor.SessionAffinityProviderMetadataKey] = "mixed"
 	opts.Metadata[cliproxyexecutor.SessionAffinityModelMetadataKey] = model
 
-	if m.hasPluginScheduler() || !m.useSchedulerFastPath() {
+	if m.hasPluginScheduler() || m.authCandidateFilter() != nil || !m.useSchedulerFastPath() {
 		return m.pickNextMixedLegacy(ctx, providers, model, opts, tried)
 	}
 

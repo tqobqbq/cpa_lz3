@@ -521,6 +521,7 @@ func (e *XAIWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *cliprox
 
 	wsHeaders := applyXAIWebsocketHeaders(ctx, http.Header{}, auth, token, prepared.sessionID, opts.Headers)
 	wsReqBody := buildXAIWebsocketRequestBody(prepared.body, prepared.finalizePayload)
+	reporter.SetOutboundServiceTier(wsReqBody)
 	requestType := strings.TrimSpace(gjson.GetBytes(req.Payload, "type").String())
 	transcriptReset := strings.TrimSpace(gjson.GetBytes(wsReqBody, "previous_response_id").String()) == "" &&
 		(requestType != "response.append" || (idMapper != nil && idMapper.replayedCompactedTranscript))
@@ -630,6 +631,7 @@ func (e *XAIWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *cliprox
 			}
 			readCh = sess.activate(conn)
 			wsReqBodyRetry := buildXAIWebsocketRequestBody(prepared.body, prepared.finalizePayload)
+			reporter.SetOutboundServiceTier(wsReqBodyRetry)
 			helps.RecordAPIWebsocketRequest(ctx, e.cfg, helps.UpstreamRequestLog{
 				URL:       wsURL,
 				Method:    "WEBSOCKET",

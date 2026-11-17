@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	coreusage "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 )
 
 // Plugin is the host-side representation produced from a dynamic plugin registration.
@@ -84,6 +86,10 @@ type Capabilities struct {
 	FrontendAuthProviderExclusive bool
 	// Scheduler chooses an auth candidate before the built-in scheduler runs.
 	Scheduler Scheduler
+	// SessionAffinityGate can pause cold session bindings before the native selector runs.
+	SessionAffinityGate SessionAffinityGate
+	// AuthCandidateFilter excludes credentials before native scheduling and affinity.
+	AuthCandidateFilter AuthCandidateFilter
 	// SchedulerAcrossPriorities opts into receiving available candidates across all priority tiers
 	// in SchedulerPickRequest.Candidates. When false (default), Candidates only contains
 	// credentials from the highest available priority tier.
@@ -510,10 +516,57 @@ type SchedulerOptions struct {
 	Metadata map[string]any
 }
 
+// SessionAffinityGate admits a session that has no reusable native affinity binding.
+// Returning an empty AuthID resumes the original selector.
+type SessionAffinityGate interface {
+	AwaitSessionAffinity(context.Context, SessionAffinityRequest) (SessionAffinityResponse, error)
+}
+
+type SessionAffinityRequest struct {
+	// APIKey is the authenticated downstream identity, independent of upstream headers.
+	APIKey string
+	// RequestID correlates this admission with request interceptors and completion.
+	RequestID string
+	// TraceID identifies the inbound HTTP request when available.
+	TraceID    string
+	Provider   string
+	Model      string
+	SessionID  string
+	Candidates []SchedulerAuthCandidate
+	// Diagnostics contains session identity inputs and native affinity lookup details.
+	Diagnostics map[string]any
+}
+
+type SessionAffinityResponse struct {
+	AuthID string
+}
+
+// HostContextWaitRequest sleeps before execution while observing downstream cancellation.
+type HostContextWaitRequest struct {
+	HostCallbackID string `json:"host_callback_id"`
+	Milliseconds   int    `json:"milliseconds"`
+}
+
+type HostContextWaitResponse struct {
+	Canceled bool `json:"canceled"`
+}
+
+// HostAuthQuotaResponse exposes passive quota watermarks without credential secrets.
+type HostAuthQuotaResponse struct {
+	AuthID     string            `json:"auth_id"`
+	Provider   string            `json:"provider"`
+	AuthKind   string            `json:"auth_kind,omitempty"`
+	Disabled   bool              `json:"disabled,omitempty"`
+	ObservedAt time.Time         `json:"observed_at"`
+	Signals    map[string]string `json:"signals"`
+}
+
 // SchedulerAuthCandidate describes one auth candidate available to a scheduler.
 type SchedulerAuthCandidate struct {
 	// ID identifies the auth record.
 	ID string
+	// AuthIndex is the stable credential index used by management and access rules.
+	AuthIndex string
 	// Provider identifies the auth provider.
 	Provider string
 	// Priority is the host priority assigned to the auth record.
@@ -748,6 +801,12 @@ type HostRecentRequestEntry struct {
 	Success int64 `json:"success"`
 	// Failed is the failure count in the bucket.
 	Failed int64 `json:"failed"`
+}
+
+// HostAuthListRequest controls the credential listing exposed to a plugin.
+type HostAuthListRequest struct {
+	// IncludeRuntime includes configuration credentials in the secret-free routing list.
+	IncludeRuntime bool `json:"include_runtime,omitempty"`
 }
 
 // HostAuthFileEntry describes one credential exposed through host auth callbacks.
@@ -1135,6 +1194,12 @@ type RequestInterceptRequest struct {
 	RequestID string
 	// TraceID identifies the parent inbound HTTP request when available.
 	TraceID string
+	// APIKey identifies the authenticated client, independently of upstream headers.
+	APIKey string
+	// ClientIP is resolved according to the server's trusted-proxy policy.
+	ClientIP string
+	// UserAgent is the original downstream User-Agent, before upstream header rewrites.
+	UserAgent string
 	// SourceFormat is the original client protocol format.
 	SourceFormat string
 	// ToFormat is the selected upstream protocol format. It is empty before credential selection.
@@ -1201,6 +1266,12 @@ type RequestCompletion struct {
 	StartedAt      time.Time
 	CompletedAt    time.Time
 	Metadata       map[string]any
+	// APIKey identifies the authenticated client that initiated the request.
+	APIKey string
+	// ClientIP is resolved according to the server's trusted-proxy policy.
+	ClientIP string
+	// UserAgent is the original downstream User-Agent, before upstream header rewrites.
+	UserAgent string
 }
 
 // ResponseInterceptRequest describes a successful non-streaming response.
@@ -1417,6 +1488,8 @@ type ManagementRegistrationRequest struct {
 	BasePath string
 	// ResourceBasePath is the plugin resource prefix for browser-navigable resources.
 	ResourceBasePath string
+	// ExtensionBasePath is the authenticated v8 prefix owned by this plugin.
+	ExtensionBasePath string
 }
 
 // ManagementRegistrationResponse lists plugin-owned Management API and resource routes.
@@ -1425,6 +1498,8 @@ type ManagementRegistrationResponse struct {
 	Routes []ManagementRoute
 	// Resources contains browser-navigable plugin resources exposed under /v0/resource/plugins/<pluginID>/.
 	Resources []ResourceRoute
+	// ExtensionRoutes declares exact routes relative to ExtensionBasePath.
+	ExtensionRoutes []ManagementRoute
 }
 
 // ManagementRoute describes one plugin-owned Management API route.
@@ -1488,6 +1563,9 @@ type ManagementResponse struct {
 type UsageRecord struct {
 	// RequestID uniquely identifies this specific model execution instance (UUID v4).
 	RequestID string
+	// LifecycleRequestID correlates execution attempts with admission and completion.
+	// It is empty for executions that did not pass through the request lifecycle handlers.
+	LifecycleRequestID string
 	// TraceID identifies the parent inbound HTTP request when available (8-character hex).
 	TraceID string
 	// Provider identifies the upstream provider.
@@ -1502,6 +1580,10 @@ type UsageRecord struct {
 	Alias string
 	// APIKey is the client API key identifier when available.
 	APIKey string
+	// ClientIP is the inbound client address, resolved by the host.
+	ClientIP string
+	// UserAgent is the original downstream User-Agent, before upstream header rewrites.
+	UserAgent string
 	// IsNativeKey reports whether the client API key was authenticated by CPA's native config provider.
 	IsNativeKey bool
 	// AccessProvider identifies the client request authentication provider (e.g. "config-inline" or plugin ID).
@@ -1520,8 +1602,11 @@ type UsageRecord struct {
 	Source string
 	// ReasoningEffort records the requested reasoning effort.
 	ReasoningEffort string
-	// ServiceTier records the requested or reported service tier.
+	// ServiceTier records the client-requested service tier.
 	ServiceTier string
+	// OutboundServiceTier records the final upstream request tier after payload rules.
+	// "auto" means omitted or automatic; empty means the final payload was not observed.
+	OutboundServiceTier string
 	// ResponseServiceTier stores the final tier reported by the upstream response.
 	ResponseServiceTier string
 	// ResponseModel stores the model name reported by the upstream response, empty when unknown.
@@ -1571,6 +1656,8 @@ type UsageDetail struct {
 	CacheCreationTokens int64
 	// TotalTokens is the total token count.
 	TotalTokens int64
+	// TokenBreakdown carries the canonical non-overlapping accounting, when available.
+	TokenBreakdown coreusage.TokenBreakdown `json:",omitempty"`
 }
 
 // QuotaProvider surfaces credential quota, balance, and billing information for management clients.

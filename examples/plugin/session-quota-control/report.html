@@ -1,0 +1,63 @@
+<div class="toolbar usage-toolbar"><button id="usageRefresh" class="secondary">刷新统计</button><label><input id="autoRefresh" type="checkbox" checked>每 5 秒更新</label></div>
+<div class="card"><form class="filters" id="filters">
+<label>日期范围<select id="range"><option value="7">近 7 天</option><option value="1">今天</option><option value="30">近 30 天</option><option value="custom">自定义</option></select></label>
+<label>开始<input id="start" name="start" type="date" required></label><label>结束<input id="end" name="end" type="date" required></label>
+<label>趋势粒度<select name="bucket"><option value="hour">小时</option><option value="day" selected>天</option><option value="month">月</option></select></label>
+<label>模型<select name="model" id="modelFilter"><option value="">全部模型</option></select></label>
+<label>Provider<select name="provider" id="providerFilter"><option value="">全部 Provider</option></select></label>
+<label>请求结果<select name="outcome"><option value="">全部结果</option><option value="succeeded">成功</option><option value="failed">失败</option><option value="canceled">已取消</option><option value="rejected">执行前终止</option><option value="running">进行中</option><option value="interrupted">服务中断</option></select></label>
+<label>User-Agent<input name="user_agent" type="search" placeholder="部分匹配，如 codex / curl" aria-label="按 User-Agent 筛选"></label>
+<label>搜索<input name="q" type="search" placeholder="API Key / IP / UA / Session / 模型 / 速度"></label><button type="submit">筛选</button>
+</form><p class="notice">日期按服务器时区统计。筛选保留匹配请求的全部重试；同一请求计数一次，上游调用、Token 和等待累计展示。</p></div>
+<div class="metrics" id="metrics"></div>
+<div id="usageMetrics" class="usage-metrics" aria-label="用量与性能统计"></div>
+<p class="traffic-provenance" id="priceSource"></p>
+<section class="card usage-trend" aria-labelledby="trendTitle">
+  <div class="top trend-heading"><div><div class="eyebrow">USAGE OVER TIME</div><h2 id="trendTitle">用量趋势</h2><p id="trendScope"></p></div>
+    <div id="trendTabs" class="toolbar trend-tabs" role="group" aria-label="趋势指标"><button type="button" data-trend="tokens" aria-pressed="true" class="secondary active-tab">Token 用量</button><button type="button" data-trend="requests" aria-pressed="false" class="secondary">请求量</button><button type="button" data-trend="cost" aria-pressed="false" class="secondary">参考费用</button><button type="button" data-trend="wait" aria-pressed="false" class="secondary">等待时间</button></div>
+  </div>
+  <div id="trendSummary" class="trend-summary"></div>
+  <div id="trendLegend" class="legend trend-legend" aria-label="图例"></div>
+  <div id="trendChart" class="trend-chart" tabindex="0" role="group" aria-label="用量趋势图" aria-describedby="trendHint trendDetail"></div>
+  <div id="trendDetail" class="trend-detail" aria-live="polite" aria-atomic="true"></div>
+  <p id="trendHint" class="trend-hint">悬停或点击查看时段明细；聚焦图表后可用左右方向键切换。按请求开始时间归集全部重试，当前时段尚未结束。</p>
+</section>
+<div class="card"><div class="top"><h2>用量分布</h2><div class="toolbar" id="groupTabs"><button type="button" data-group="models" class="active-tab">模型</button><button type="button" data-group="providers" class="secondary">上游 Provider</button><button type="button" data-group="credentials" class="secondary">上游 Credential</button><button type="button" data-group="keys" class="secondary">下游 API Key</button></div></div><p class="notice" id="groupDescription">按实际调用归集用量。</p><div class="table-wrap"><table><thead><tr><th id="groupTitle">模型</th><th>请求 / 上游调用</th><th title="输入包含缓存读写，输出包含推理；子项不重复相加">Token 分项</th><th>总 Token</th><th>缓存率</th><th>API 参考费用</th><th>上游失败</th><th>平均执行耗时</th><th>平均首字</th><th>TPS（不含首字）</th><th>TPS（含首字）</th><th>实际等待</th></tr></thead><tbody id="groups"><tr><td colspan="12" class="empty">连接后显示统计</td></tr></tbody></table></div></div>
+<section class="card request-list" aria-labelledby="requestListTitle">
+  <div class="request-list-heading top">
+    <div><div class="eyebrow">REQUEST LOG</div><h2 id="requestListTitle">请求明细 <span id="requestCount" class="badge neutral">—</span></h2><p>从请求结果、用量与耗时，追踪每一次调度和上游调用。</p></div>
+    <div id="requestListStatus" class="request-list-status" role="status">连接后显示请求记录</div>
+  </div>
+  <div id="requestScope" class="request-scope" aria-label="已应用的筛选条件"></div>
+  <div class="table-wrap request-table-wrap" tabindex="0" role="region" aria-label="请求明细表，可横向滚动">
+    <table class="request-table"><thead><tr>
+      <th scope="col">时间 / 请求</th><th scope="col">来源 API Key / IP / UA</th><th scope="col">模型 / Effort / 速度</th><th scope="col">上游 Provider / Credential</th><th scope="col">结果 / 调用</th><th scope="col" title="输入包含缓存读写，输出包含推理；子项不重复相加">Token 明细</th><th scope="col">API 参考费用</th><th scope="col">等待时间</th><th scope="col">耗时 / 性能</th><th scope="col"><span class="muted">操作</span></th>
+    </tr></thead><tbody id="requests"><tr><td colspan="10" class="empty">连接后显示请求记录</td></tr></tbody></table>
+  </div>
+  <div class="toolbar request-pager" id="pager"><span id="pageInfo">暂无记录</span><div class="toolbar"><label class="page-size">每页 <select id="requestPageSize" aria-label="每页请求数"><option value="25">25 条</option><option value="50" selected>50 条</option><option value="100">100 条</option></select></label><button id="previous" class="secondary" disabled>上一页</button><button id="next" class="secondary" disabled>下一页</button></div></div>
+  <details class="table-help request-help"><summary>统计口径与等待时间说明</summary><p>同一请求计数一次，Token 与上游执行耗时累计全部重试。输入包含缓存读取，输出包含推理，这些子项不重复计入总 Token。5h 是额度窗口；节流计划是选定 Credential 后确定的等待时间，实际等待可能因取消而缩短。进行中展示已记录的等待，请求结束后仍缺少计时的部分显示为未知。总耗时包含等待、调度和重试；执行耗时不含此前等待。上游是请求去向的 Provider / Credential，下游是使用 API Key 请求本服务的客户端。来源列展示明文 API Key、服务端解析的 IP 和下游原始 User-Agent。User-Agent 筛选支持不区分大小写的部分匹配；历史未采集的值不会补推。TPS（不含首字）= 输出 Token ÷（上游执行耗时 − 首字耗时）；TPS（含首字）= 输出 Token ÷ 上游执行耗时。两者均不含调用前的调度和等待，先累加有效成功调用的输出和对应时长再相除。缺少首字计时则不推算不含首字 TPS。缓存率 = 缓存读取 Token ÷ 总输入 Token；汇总按 Token 加权。速度显示配置规则处理后的最终出站档位；Fast 兼容 priority，Ultra-fast 对应 ultrafast。过滤 service_tier 后记为 Auto，由上游自动选择档位；客户端原始值和上游响应值分别保留在详情中。计价优先使用可确认的响应档位。Codex OAuth 的响应 default/auto 视为未确认，此时按最终出站档位估价。历史未采集出站档位的记录会明确标注，估价沿用客户端档位并注明来源；估价不代表套餐扣费。历史未记录或 Auto 未确认时使用 Standard 基准并注明。Effort 不直接改变单价。费用“待定”表示有调用因缺少匹配模型或速度档位单价、适用缓存单价或完整用量而未估价；已显示的金额仅包含能估价的部分，不代表待定调用免费。失败或重试缺少用量时也可能待定。</p></details>
+</section>
+<div class="card"><details><summary>统计存储设置</summary><form id="storage" class="toolbar"><label><input id="usageEnabled" type="checkbox" checked>启用统计记录</label><label>SQLite 路径<input id="dbPath" class="storage-path" required></label><button type="submit">保存</button></form><p class="notice">关闭采集不删除已有数据库。记录从启用后开始积累；保存来源明文 API Key、IP 和 User-Agent，不保存请求及响应正文。数据库仅供本插件使用。</p></details><div id="storageStatus" class="notice"></div><p class="notice">实现参考 <a href="https://github.com/andyWang1688/cpa-usage/tree/v0.3.1" target="_blank" rel="noopener noreferrer">CPA Usage Report</a>（MIT）。Token 按统一分项统计，输入包含缓存读取与写入，输出包含推理，子项不重复计入总 Token。服务中断时未完成的计时标记为未知，趋势图只累计已记录的时长。</p></div>
+
+<dialog id="detail" class="request-dialog" aria-labelledby="detailTitle" aria-describedby="detailSummary">
+  <header class="request-dialog-header top">
+    <div><div class="eyebrow">REQUEST INSPECTOR</div><h2 id="detailTitle">请求详情</h2><div id="detailSummary" class="request-detail-subtitle">请求的完整执行记录</div></div>
+    <div class="toolbar"><button id="detailRefresh" class="secondary">刷新详情</button><button id="detailClose" class="secondary dialog-close" aria-label="关闭请求详情" autofocus>×</button></div>
+  </header>
+  <div id="detailFeedback" class="request-feedback" role="status" aria-live="polite"></div>
+  <div id="detailContent" hidden>
+    <div id="detailHero" class="request-hero"></div>
+    <div id="detailMetrics" class="request-detail-metrics"></div>
+    <div id="detailError" class="request-error" hidden></div>
+    <nav id="detailTabs" class="request-detail-tabs" role="tablist" aria-label="请求详情视图">
+      <button type="button" id="requestOverviewTab" role="tab" aria-controls="requestOverviewPanel" aria-selected="true" data-detail-tab="overview">请求概览</button>
+      <button type="button" id="requestTrafficTab" role="tab" aria-controls="requestTrafficPanel" aria-selected="false" tabindex="-1" data-detail-tab="traffic">单价 / 费用</button>
+      <button type="button" id="requestTimelineTab" role="tab" aria-controls="requestTimelinePanel" aria-selected="false" tabindex="-1" data-detail-tab="timeline">执行时间线 <span id="detailEventCount" class="badge neutral">0</span></button>
+      <button type="button" id="requestRawTab" role="tab" aria-controls="requestRawPanel" aria-selected="false" tabindex="-1" data-detail-tab="raw">原始数据</button>
+    </nav>
+    <section id="requestOverviewPanel" role="tabpanel" aria-labelledby="requestOverviewTab"><div class="request-overview-grid"><section class="request-section"><h3>请求信息</h3><dl id="detailIdentity" class="request-fields"></dl></section><section class="request-section"><h3>上游 Token 构成</h3><div id="detailTokens"></div><h3 class="request-section-divider">时间分布</h3><div id="detailTiming"></div></section></div></section>
+    <section id="requestTrafficPanel" role="tabpanel" aria-labelledby="requestTrafficTab" hidden><div class="request-pricing-section"><div id="detailCostStatus" class="notice"></div><h3>模型 API 单价</h3><p id="detailPriceSource" class="request-footnote"></p><div id="detailPrices"></div><p class="request-footnote">按模型与速度档位的文本 API 单价估算，金额为美元；不代表 OAuth 套餐实扣费用，不含工具、图片、音频的额外计费。费用累计该请求的所有调用与重试。</p></div></section>
+    <section id="requestTimelinePanel" role="tabpanel" aria-labelledby="requestTimelineTab" hidden><div class="request-timeline-heading"><h3>从接收到结束</h3><p>按事件开始时间排列；上游耗时和 Token 累计所有调用。</p></div><ol id="detailTimeline" class="request-timeline"></ol></section>
+    <section id="requestRawPanel" role="tabpanel" aria-labelledby="requestRawTab" hidden><div class="top request-raw-heading"><p>用于排查的结构化记录，计时单位为毫秒。</p><button id="detailCopyJSON" class="secondary">复制 JSON</button></div><pre id="detailBody" tabindex="0" aria-label="请求原始数据"></pre></section>
+  </div>
+</dialog>

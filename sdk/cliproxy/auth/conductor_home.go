@@ -281,6 +281,9 @@ func isHomeRequestRetryExceededError(err error) bool {
 }
 
 func shouldReturnLastErrorOnPickFailure(homeMode bool, lastErr error, errPick error) bool {
+	if isRequestTerminatedError(errPick) || isRequestStopError(errPick) {
+		return false
+	}
 	if lastErr == nil {
 		return false
 	}

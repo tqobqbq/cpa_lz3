@@ -340,6 +340,9 @@ func EnrichContextWithSessionHierarchy(ctx context.Context, headers http.Header,
 }
 
 func enrichContextWithSessionHierarchy(ctx context.Context, headers http.Header, payload []byte, metadata map[string]any) context.Context {
+	if requestID, _ := metadata[coreexecutor.RequestLifecycleIDMetadataKey].(string); requestID != "" {
+		ctx = coreexecutor.WithRequestLifecycleID(ctx, requestID)
+	}
 	return EnrichContextWithSessionHierarchy(ctx, headers, payload, metadata)
 }
 

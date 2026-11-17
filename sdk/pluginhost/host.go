@@ -197,6 +197,28 @@ func (h *Host) HasScheduler() bool {
 	return h != nil && h.inner != nil && h.inner.HasScheduler()
 }
 
+func (h *Host) HasAuthCandidateFilters() bool {
+	return h != nil && h.inner != nil && h.inner.HasAuthCandidateFilters()
+}
+
+func (h *Host) FilterAuthCandidates(ctx context.Context, req pluginapi.AuthCandidateFilterRequest) (pluginapi.AuthCandidateFilterResponse, error) {
+	if h == nil || h.inner == nil {
+		return pluginapi.AuthCandidateFilterResponse{}, nil
+	}
+	return h.inner.FilterAuthCandidates(ctx, req)
+}
+
+func (h *Host) HasSessionAffinityGate() bool {
+	return h != nil && h.inner != nil && h.inner.HasSessionAffinityGate()
+}
+
+func (h *Host) AwaitSessionAffinity(ctx context.Context, req pluginapi.SessionAffinityRequest) (pluginapi.SessionAffinityResponse, error) {
+	if h == nil || h.inner == nil {
+		return pluginapi.SessionAffinityResponse{}, nil
+	}
+	return h.inner.AwaitSessionAffinity(ctx, req)
+}
+
 // SchedulerWantsAcrossPriorities reports whether the active scheduler opted into receiving
 // candidates across all priority tiers.
 func (h *Host) SchedulerWantsAcrossPriorities() bool {

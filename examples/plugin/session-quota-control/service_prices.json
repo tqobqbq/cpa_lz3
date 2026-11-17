@@ -1,0 +1,929 @@
+{
+  "source": "https://developers.openai.com/api/docs/pricing",
+  "fetched_at": "2026-11-06T14:57:35.448018+00:00",
+  "currency": "USD",
+  "unit": "per_million_tokens",
+  "cache_write_basis": "30m cache writes; 12h writes are not distinguished in collected token counters",
+  "providers": {
+    "openai": {
+      "gpt-6-astra": {
+        "service_tiers": {
+          "flex": {
+            "input": 5.0,
+            "output": 25.0,
+            "cache_read": 0.5,
+            "cache_write": 6.25,
+            "tiers": [
+              {
+                "input": 10.0,
+                "output": 37.5,
+                "cache_read": 1.0,
+                "cache_write": 12.5,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "fast": {
+            "input": 20.0,
+            "output": 100.0,
+            "cache_read": 2.0,
+            "cache_write": 25.0,
+            "tiers": [
+              {
+                "input": 40.0,
+                "output": 150.0,
+                "cache_read": 4.0,
+                "cache_write": 50.0,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "ultrafast": {
+            "input": 60.0,
+            "output": 300.0,
+            "cache_read": 6.0,
+            "cache_write": 75.0,
+            "tiers": [
+              {
+                "input": 120.0,
+                "output": 450.0,
+                "cache_read": 12.0,
+                "cache_write": 150.0,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 10.0,
+          "output": 50.0,
+          "cache_read": 1.0,
+          "cache_write": 12.5,
+          "tiers": [
+            {
+              "input": 20.0,
+              "output": 75.0,
+              "cache_read": 2.0,
+              "cache_write": 25.0,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-6.1-sol": {
+        "service_tiers": {
+          "flex": {
+            "input": 1.0,
+            "output": 5.0,
+            "cache_read": 0.05,
+            "cache_write": 1.25,
+            "tiers": [
+              {
+                "input": 2.0,
+                "output": 7.5,
+                "cache_read": 0.1,
+                "cache_write": 2.5,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "fast": {
+            "input": 4.0,
+            "output": 20.0,
+            "cache_read": 0.2,
+            "cache_write": 5.0,
+            "tiers": [
+              {
+                "input": 8.0,
+                "output": 30.0,
+                "cache_read": 0.4,
+                "cache_write": 10.0,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "ultrafast": {
+            "input": 12.0,
+            "output": 60.0,
+            "cache_read": 0.6,
+            "cache_write": 15.0,
+            "tiers": [
+              {
+                "input": 24.0,
+                "output": 90.0,
+                "cache_read": 1.2,
+                "cache_write": 30.0,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 2.0,
+          "output": 10.0,
+          "cache_read": 0.1,
+          "cache_write": 2.5,
+          "tiers": [
+            {
+              "input": 4.0,
+              "output": 15.0,
+              "cache_read": 0.2,
+              "cache_write": 5.0,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-6.1-terra": {
+        "service_tiers": {
+          "flex": {
+            "input": 0.5,
+            "output": 2.5,
+            "cache_read": 0.025,
+            "cache_write": 0.625,
+            "tiers": [
+              {
+                "input": 1.0,
+                "output": 3.75,
+                "cache_read": 0.05,
+                "cache_write": 1.25,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "fast": {
+            "input": 2.0,
+            "output": 10.0,
+            "cache_read": 0.1,
+            "cache_write": 2.5,
+            "tiers": [
+              {
+                "input": 4.0,
+                "output": 15.0,
+                "cache_read": 0.2,
+                "cache_write": 5.0,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 1.0,
+          "output": 5.0,
+          "cache_read": 0.05,
+          "cache_write": 1.25,
+          "tiers": [
+            {
+              "input": 2.0,
+              "output": 7.5,
+              "cache_read": 0.1,
+              "cache_write": 2.5,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-6-luna": {
+        "service_tiers": {
+          "flex": {
+            "input": 0.05,
+            "output": 0.25,
+            "cache_read": 0.005,
+            "cache_write": 0.0625,
+            "tiers": [
+              {
+                "input": 0.1,
+                "output": 0.375,
+                "cache_read": 0.01,
+                "cache_write": 0.125,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "fast": {
+            "input": 0.2,
+            "output": 1.0,
+            "cache_read": 0.02,
+            "cache_write": 0.25,
+            "tiers": [
+              {
+                "input": 0.4,
+                "output": 1.5,
+                "cache_read": 0.04,
+                "cache_write": 0.5,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_read": 0.01,
+          "cache_write": 0.125,
+          "tiers": [
+            {
+              "input": 0.2,
+              "output": 0.75,
+              "cache_read": 0.02,
+              "cache_write": 0.25,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-6-sol": {
+        "service_tiers": {
+          "flex": {
+            "input": 1.0,
+            "output": 5.0,
+            "cache_read": 0.1,
+            "cache_write": 1.25,
+            "tiers": [
+              {
+                "input": 2.0,
+                "output": 7.5,
+                "cache_read": 0.2,
+                "cache_write": 2.5,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "fast": {
+            "input": 4.0,
+            "output": 20.0,
+            "cache_read": 0.4,
+            "cache_write": 5.0,
+            "tiers": [
+              {
+                "input": 8.0,
+                "output": 30.0,
+                "cache_read": 0.8,
+                "cache_write": 10.0,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 2.0,
+          "output": 10.0,
+          "cache_read": 0.2,
+          "cache_write": 2.5,
+          "tiers": [
+            {
+              "input": 4.0,
+              "output": 15.0,
+              "cache_read": 0.4,
+              "cache_write": 5.0,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-5.6-sol": {
+        "service_tiers": {
+          "flex": {
+            "input": 2.0,
+            "output": 10.0,
+            "cache_read": 0.2,
+            "cache_write": 2.5,
+            "tiers": [
+              {
+                "input": 4.0,
+                "output": 15.0,
+                "cache_read": 0.4,
+                "cache_write": 5.0,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "fast": {
+            "input": 8.0,
+            "output": 40.0,
+            "cache_read": 0.8,
+            "cache_write": 10.0,
+            "tiers": [
+              {
+                "input": 16.0,
+                "output": 60.0,
+                "cache_read": 1.6,
+                "cache_write": 20.0,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 4.0,
+          "output": 20.0,
+          "cache_read": 0.4,
+          "cache_write": 5.0,
+          "tiers": [
+            {
+              "input": 8.0,
+              "output": 30.0,
+              "cache_read": 0.8,
+              "cache_write": 10.0,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-5.6-terra": {
+        "service_tiers": {
+          "flex": {
+            "input": 1.0,
+            "output": 6.0,
+            "cache_read": 0.1,
+            "cache_write": 1.25,
+            "tiers": [
+              {
+                "input": 2.0,
+                "output": 9.0,
+                "cache_read": 0.2,
+                "cache_write": 2.5,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "fast": {
+            "input": 4.0,
+            "output": 24.0,
+            "cache_read": 0.4,
+            "cache_write": 5.0,
+            "tiers": [
+              {
+                "input": 8.0,
+                "output": 36.0,
+                "cache_read": 0.8,
+                "cache_write": 10.0,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 2.0,
+          "output": 12.0,
+          "cache_read": 0.2,
+          "cache_write": 2.5,
+          "tiers": [
+            {
+              "input": 4.0,
+              "output": 18.0,
+              "cache_read": 0.4,
+              "cache_write": 5.0,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-5.6-luna": {
+        "service_tiers": {
+          "flex": {
+            "input": 0.1,
+            "output": 0.6,
+            "cache_read": 0.01,
+            "cache_write": 0.125,
+            "tiers": [
+              {
+                "input": 0.2,
+                "output": 0.9,
+                "cache_read": 0.02,
+                "cache_write": 0.25,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "fast": {
+            "input": 0.4,
+            "output": 2.4,
+            "cache_read": 0.04,
+            "cache_write": 0.5,
+            "tiers": [
+              {
+                "input": 0.8,
+                "output": 3.6,
+                "cache_read": 0.08,
+                "cache_write": 1.0,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 0.2,
+          "output": 1.2,
+          "cache_read": 0.02,
+          "cache_write": 0.25,
+          "tiers": [
+            {
+              "input": 0.4,
+              "output": 1.8,
+              "cache_read": 0.04,
+              "cache_write": 0.5,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-5.5": {
+        "service_tiers": {
+          "flex": {
+            "input": 2.5,
+            "output": 15.0,
+            "cache_read": 0.25,
+            "cache_write": null,
+            "tiers": [
+              {
+                "input": 5.0,
+                "output": 22.5,
+                "cache_read": 0.5,
+                "cache_write": null,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "fast": {
+            "input": 12.5,
+            "output": 75.0,
+            "cache_read": 1.25,
+            "cache_write": null,
+            "tiers": [
+              {
+                "input": null,
+                "output": null,
+                "cache_read": null,
+                "cache_write": null,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 5.0,
+          "output": 30.0,
+          "cache_read": 0.5,
+          "cache_write": null,
+          "tiers": [
+            {
+              "input": 10.0,
+              "output": 45.0,
+              "cache_read": 1.0,
+              "cache_write": null,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-5.5-pro": {
+        "service_tiers": {
+          "flex": {
+            "input": 15.0,
+            "output": 90.0,
+            "cache_read": null,
+            "cache_write": null,
+            "tiers": [
+              {
+                "input": null,
+                "output": null,
+                "cache_read": null,
+                "cache_write": null,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 30.0,
+          "output": 180.0,
+          "cache_read": null,
+          "cache_write": null,
+          "tiers": [
+            {
+              "input": 60.0,
+              "output": 270.0,
+              "cache_read": null,
+              "cache_write": null,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-5.4": {
+        "service_tiers": {
+          "flex": {
+            "input": 1.25,
+            "output": 7.5,
+            "cache_read": 0.13,
+            "cache_write": null,
+            "tiers": [
+              {
+                "input": 2.5,
+                "output": 11.25,
+                "cache_read": 0.25,
+                "cache_write": null,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          },
+          "fast": {
+            "input": 5.0,
+            "output": 30.0,
+            "cache_read": 0.5,
+            "cache_write": null,
+            "tiers": [
+              {
+                "input": null,
+                "output": null,
+                "cache_read": null,
+                "cache_write": null,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 2.5,
+          "output": 15.0,
+          "cache_read": 0.25,
+          "cache_write": null,
+          "tiers": [
+            {
+              "input": 5.0,
+              "output": 22.5,
+              "cache_read": 0.5,
+              "cache_write": null,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-5.4-pro": {
+        "service_tiers": {
+          "flex": {
+            "input": 15.0,
+            "output": 90.0,
+            "cache_read": null,
+            "cache_write": null,
+            "tiers": [
+              {
+                "input": 30.0,
+                "output": 135.0,
+                "cache_read": null,
+                "cache_write": null,
+                "tier": {
+                  "type": "context",
+                  "size": 272000
+                }
+              }
+            ]
+          }
+        },
+        "cost": {
+          "input": 30.0,
+          "output": 180.0,
+          "cache_read": null,
+          "cache_write": null,
+          "tiers": [
+            {
+              "input": 60.0,
+              "output": 270.0,
+              "cache_read": null,
+              "cache_write": null,
+              "tier": {
+                "type": "context",
+                "size": 272000
+              }
+            }
+          ]
+        }
+      },
+      "gpt-5.4-mini": {
+        "service_tiers": {
+          "flex": {
+            "input": 0.375,
+            "output": 2.25,
+            "cache_read": 0.0375
+          },
+          "fast": {
+            "input": 1.5,
+            "output": 9.0,
+            "cache_read": 0.15
+          }
+        },
+        "cost": {
+          "input": 0.75,
+          "output": 4.5,
+          "cache_read": 0.075
+        }
+      },
+      "gpt-5.4-nano": {
+        "service_tiers": {
+          "flex": {
+            "input": 0.1,
+            "output": 0.625,
+            "cache_read": 0.01
+          }
+        },
+        "cost": {
+          "input": 0.2,
+          "output": 1.25,
+          "cache_read": 0.02
+        }
+      },
+      "gpt-5.2": {
+        "service_tiers": {
+          "flex": {
+            "input": 0.875,
+            "output": 7.0,
+            "cache_read": 0.0875
+          },
+          "fast": {
+            "input": 3.5,
+            "output": 28.0,
+            "cache_read": 0.35
+          }
+        },
+        "cost": {
+          "input": 1.75,
+          "output": 14.0,
+          "cache_read": 0.175
+        }
+      },
+      "gpt-5.2-pro": {
+        "service_tiers": {},
+        "cost": {
+          "input": 21.0,
+          "output": 168.0,
+          "cache_read": null
+        }
+      },
+      "gpt-5.1": {
+        "service_tiers": {
+          "flex": {
+            "input": 0.625,
+            "output": 5.0,
+            "cache_read": 0.0625
+          },
+          "fast": {
+            "input": 2.5,
+            "output": 20.0,
+            "cache_read": 0.25
+          }
+        },
+        "cost": {
+          "input": 1.25,
+          "output": 10.0,
+          "cache_read": 0.125
+        }
+      },
+      "gpt-5": {
+        "service_tiers": {
+          "flex": {
+            "input": 0.625,
+            "output": 5.0,
+            "cache_read": 0.0625
+          },
+          "fast": {
+            "input": 2.5,
+            "output": 20.0,
+            "cache_read": 0.25
+          }
+        },
+        "cost": {
+          "input": 1.25,
+          "output": 10.0,
+          "cache_read": 0.125
+        }
+      },
+      "gpt-5-mini": {
+        "service_tiers": {
+          "flex": {
+            "input": 0.125,
+            "output": 1.0,
+            "cache_read": 0.0125
+          },
+          "fast": {
+            "input": 0.45,
+            "output": 3.6,
+            "cache_read": 0.045
+          }
+        },
+        "cost": {
+          "input": 0.25,
+          "output": 2.0,
+          "cache_read": 0.025
+        }
+      },
+      "gpt-5-nano": {
+        "service_tiers": {
+          "flex": {
+            "input": 0.025,
+            "output": 0.2,
+            "cache_read": 0.0025
+          }
+        },
+        "cost": {
+          "input": 0.05,
+          "output": 0.4,
+          "cache_read": 0.005
+        }
+      },
+      "gpt-5-pro": {
+        "service_tiers": {},
+        "cost": {
+          "input": 15.0,
+          "output": 120.0,
+          "cache_read": null
+        }
+      },
+      "gpt-4.1": {
+        "service_tiers": {
+          "fast": {
+            "input": 3.5,
+            "output": 14.0,
+            "cache_read": 0.875
+          }
+        },
+        "cost": {
+          "input": 2.0,
+          "output": 8.0,
+          "cache_read": 0.5
+        }
+      },
+      "gpt-4.1-mini": {
+        "service_tiers": {
+          "fast": {
+            "input": 0.7,
+            "output": 2.8,
+            "cache_read": 0.175
+          }
+        },
+        "cost": {
+          "input": 0.4,
+          "output": 1.6,
+          "cache_read": 0.1
+        }
+      },
+      "gpt-4o": {
+        "service_tiers": {
+          "fast": {
+            "input": 4.25,
+            "output": 17.0,
+            "cache_read": 2.125
+          }
+        },
+        "cost": {
+          "input": 2.5,
+          "output": 10.0,
+          "cache_read": 1.25
+        }
+      },
+      "gpt-4o-mini": {
+        "service_tiers": {
+          "fast": {
+            "input": 0.25,
+            "output": 1.0,
+            "cache_read": 0.125
+          }
+        },
+        "cost": {
+          "input": 0.15,
+          "output": 0.6,
+          "cache_read": 0.075
+        }
+      },
+      "o3-pro": {
+        "service_tiers": {},
+        "cost": {
+          "input": 20.0,
+          "output": 80.0,
+          "cache_read": null
+        }
+      },
+      "o3": {
+        "service_tiers": {
+          "flex": {
+            "input": 1.0,
+            "output": 4.0,
+            "cache_read": 0.25
+          },
+          "fast": {
+            "input": 3.5,
+            "output": 14.0,
+            "cache_read": 0.875
+          }
+        },
+        "cost": {
+          "input": 2.0,
+          "output": 8.0,
+          "cache_read": 0.5
+        }
+      }
+    }
+  }
+}

@@ -13,11 +13,13 @@ func (s *Server) registerManagementV8Routes() {
 	const prefix = "/v8/management"
 	s.engine.GET(prefix+"/oauth/callback", s.managementAvailabilityMiddleware(), s.mgmt.GetOAuthCallback)
 	s.engine.POST(prefix+"/oauth/callback", s.managementAvailabilityMiddleware(), s.mgmt.PostOAuthCallback)
+	s.engine.DELETE(prefix+"/session/plugin", s.managementAvailabilityMiddleware(), s.mgmt.DeletePluginBrowserSession)
 
 	v8 := s.engine.Group(prefix)
-	v8.Use(s.managementAvailabilityMiddleware(), s.mgmt.Middleware(), func(c *gin.Context) {
+	v8.Use(s.managementAvailabilityMiddleware(), s.mgmt.V8Middleware(), func(c *gin.Context) {
 		c.Set(management.ConfigV8ContextKey, true)
 	})
+	v8.POST("/session/plugin", s.mgmt.CreatePluginBrowserSession)
 	v8.GET("/config", s.mgmt.ConfigV8)
 	v8.PUT("/config", s.mgmt.ConfigV8)
 	v8.PATCH("/config", s.mgmt.ConfigV8)
@@ -41,6 +43,7 @@ func (s *Server) registerManagementV8Routes() {
 	v8.GET("/observability/usage/queue", s.mgmt.GetUsageQueue)
 
 	v8.GET("/credentials", s.mgmt.ListAuthFiles)
+	v8.GET("/credentials/quota-observations", s.mgmt.GetCredentialQuotaObservations)
 	v8.POST("/credentials", s.mgmt.UploadAuthFile)
 	v8.DELETE("/credentials", s.mgmt.DeleteAuthFile)
 	v8.GET("/credentials/models", s.mgmt.GetAuthFileModels)
@@ -60,4 +63,11 @@ func (s *Server) registerManagementV8Routes() {
 	v8.GET("/plugins/:id/quota", s.mgmt.GetPluginQuota)
 	v8.POST("/plugins/:id/quota", s.mgmt.FetchPluginQuota)
 	v8.DELETE("/plugins/:id/quota", s.mgmt.ResetPluginQuota)
+	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete} {
+		v8.Handle(method, "/plugins/:id/extension/*path", func(c *gin.Context) {
+			if s.pluginHost == nil || !s.pluginHost.ServeManagementHTTP(c.Writer, c.Request) {
+				c.AbortWithStatus(http.StatusNotFound)
+			}
+		})
+	}
 }

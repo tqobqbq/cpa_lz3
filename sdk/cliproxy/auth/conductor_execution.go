@@ -96,6 +96,9 @@ func unwrapExecutionBoundaryError(err error) error {
 }
 
 func preferredExecutionAttemptError(fallback, upstream error) error {
+	if isRequestTerminatedError(fallback) || isRequestStopError(fallback) {
+		return fallback
+	}
 	if errors.Is(fallback, context.Canceled) || errors.Is(fallback, context.DeadlineExceeded) {
 		return fallback
 	}
@@ -585,7 +588,7 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 			}
 			execOpts.Metadata = ensureCanonicalSessionMetadata(execOpts.Metadata, execOpts.Headers, payload)
 			var errIntercept error
-			execReq, execOpts, errIntercept = applyRequestAfterAuthInterceptor(execCtx, executor, provider, execReq, execOpts, requestedModelAliasFromOptions(execOpts, routeModel))
+			execReq, execOpts, errIntercept = m.interceptAndValidateAuth(execCtx, executor, auth, provider, execReq, execOpts, requestedModelAliasFromOptions(execOpts, routeModel))
 			if errIntercept != nil {
 				return cliproxyexecutor.Response{}, errIntercept
 			}
@@ -609,6 +612,9 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 					execCtx = newUpstreamAttemptContext(execCtx)
 					execCtx = syncMetadataSessionToContext(execCtx, execOpts.Metadata)
 					startRetry := time.Now()
+					if errAccess := m.validateAuthAccess(execCtx, auth, provider, routeModel, execOpts); errAccess != nil {
+						return cliproxyexecutor.Response{}, errAccess
+					}
 					resp, errExec = executor.Execute(execCtx, auth, execReq, execOpts)
 					errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
 					durationRetry := time.Since(startRetry)
@@ -797,7 +803,7 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 			}
 			execOpts.Metadata = ensureCanonicalSessionMetadata(execOpts.Metadata, execOpts.Headers, payload)
 			var errIntercept error
-			execReq, execOpts, errIntercept = applyRequestAfterAuthInterceptor(execCtx, executor, provider, execReq, execOpts, requestedModelAliasFromOptions(execOpts, routeModel))
+			execReq, execOpts, errIntercept = m.interceptAndValidateAuth(execCtx, executor, auth, provider, execReq, execOpts, requestedModelAliasFromOptions(execOpts, routeModel))
 			if errIntercept != nil {
 				return cliproxyexecutor.Response{}, errIntercept
 			}
@@ -821,6 +827,9 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 					execCtx = newUpstreamAttemptContext(execCtx)
 					execCtx = syncMetadataSessionToContext(execCtx, execOpts.Metadata)
 					startRetry := time.Now()
+					if errAccess := m.validateAuthAccess(execCtx, auth, provider, routeModel, execOpts); errAccess != nil {
+						return cliproxyexecutor.Response{}, errAccess
+					}
 					resp, errExec = executor.CountTokens(execCtx, auth, execReq, execOpts)
 					errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
 					durationRetry := time.Since(startRetry)
@@ -1177,6 +1186,13 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 		}
 		streamResult, errStream := m.executeStreamWithModelPool(execCtx, executor, auth, provider, execReq, execOpts, routeModel, streamExecutionModel, models, pooled, aliasResult, routing, !homeMode || selection != nil, selection != nil)
 		if errStream != nil {
+			if isRequestTerminatedError(errStream) || isRequestStopError(errStream) {
+				if selection != nil {
+					releaseAttempt()
+					selection.End("request_intercepted")
+				}
+				return nil, errStream
+			}
 			if hasUpstreamExecutionAttempt(errStream) {
 				upstreamErr = errStream
 			}

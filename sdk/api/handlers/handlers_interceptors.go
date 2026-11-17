@@ -13,6 +13,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/interfaces"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/logging"
 	coreexecutor "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/executor"
+	coreusage "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/pluginapi"
 	"golang.org/x/net/context"
 )
@@ -108,6 +109,18 @@ func webSocketResponseObserversEnabled(host PluginInterceptorHost) bool {
 	return true
 }
 
+// requestSource reads authenticated identity, the host-resolved client address,
+// and the original downstream user agent.
+// Upstream credentials and untrusted forwarding headers are not identity sources.
+func requestSource(ctx context.Context) (string, string, string) {
+	meta := logging.GetClientRequestMetadata(ctx)
+	ip := strings.TrimSpace(meta.ResolvedClientIP)
+	if ip == "" {
+		ip = strings.TrimSpace(meta.ClientIP)
+	}
+	return coreusage.APIKeyFromContext(ctx), ip, strings.TrimSpace(meta.UserAgent)
+}
+
 type requestLifecycleTracker struct {
 	once         sync.Once
 	ctx          context.Context
@@ -118,7 +131,11 @@ type requestLifecycleTracker struct {
 
 func (h *BaseAPIHandler) newRequestLifecycleTracker(ctx context.Context, sourceFormat, model, requestedModel string, stream bool, metadata map[string]any, skipPluginID string) *requestLifecycleTracker {
 	requestID := uuid.NewString()
+	if metadata != nil {
+		metadata[coreexecutor.RequestLifecycleIDMetadataKey] = requestID
+	}
 	traceID := logging.GetRequestID(ctx)
+	apiKey, clientIP, userAgent := requestSource(ctx)
 	return &requestLifecycleTracker{
 		ctx:          ctx,
 		host:         h.interceptorHost(),
@@ -126,6 +143,9 @@ func (h *BaseAPIHandler) newRequestLifecycleTracker(ctx context.Context, sourceF
 		completion: pluginapi.RequestCompletion{
 			RequestID:      requestID,
 			TraceID:        traceID,
+			APIKey:         apiKey,
+			ClientIP:       clientIP,
+			UserAgent:      userAgent,
 			SourceFormat:   sourceFormat,
 			Model:          model,
 			RequestedModel: requestedModel,
@@ -490,7 +510,11 @@ func (h *BaseAPIHandler) applyRequestInterceptorsBeforeAuth(ctx context.Context,
 	if !requestInterceptorsEnabled(host) {
 		return req, opts, nil
 	}
+	apiKey, clientIP, userAgent := requestSource(ctx)
 	resp := interceptRequestBeforeAuth(ctx, host, pluginapi.RequestInterceptRequest{
+		APIKey:         apiKey,
+		ClientIP:       clientIP,
+		UserAgent:      userAgent,
 		RequestID:      requestID,
 		TraceID:        logging.GetRequestID(ctx),
 		SourceFormat:   handlerType,
@@ -579,7 +603,11 @@ func (h *BaseAPIHandler) applyRequestInterceptorsAfterAuth(ctx context.Context, 
 	if !requestInterceptorsEnabled(host) {
 		return coreexecutor.RequestAfterAuthInterceptResponse{}
 	}
+	apiKey, clientIP, userAgent := requestSource(ctx)
 	resp := interceptRequestAfterAuth(ctx, host, pluginapi.RequestInterceptRequest{
+		APIKey:         apiKey,
+		ClientIP:       clientIP,
+		UserAgent:      userAgent,
 		RequestID:      requestID,
 		TraceID:        logging.GetRequestID(ctx),
 		SourceFormat:   req.SourceFormat.String(),

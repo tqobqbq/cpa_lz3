@@ -12,6 +12,25 @@ Send `Authorization: Bearer <management-key>` or `X-Management-Key: <management-
 OAuth callbacks validate a pending login state and do not require a management-key
 header. Home mode disables local management endpoints for both versions.
 
+The built-in management page exposes a restricted parent-page request bridge to
+embedded plugin pages. It reads the bundled frontend's active authentication
+store for each request and accepts only plugin extension and per-plugin config
+paths; it never returns the management key to a plugin iframe. Embedded plugins
+do not depend on a cookie being established. The bridge is injected when serving
+the frontend asset, leaving the downloaded file intact.
+
+The built-in management page also establishes an encrypted, HttpOnly browser
+session via `POST /session/plugin` using its existing management key. The cookie
+can authenticate `/plugins/<id>/extension/*` and
+`/config/plugins/configs/<id>[/...]` only; other endpoints still require a key
+header. Requests continue to validate the original key and remote-access policy.
+Sessions expire after 12 hours and cannot survive a server restart. Cross-origin
+cookie requests are rejected; same-origin plugin pages use
+`fetch(..., {credentials: "same-origin"})`. The downloaded frontend is augmented
+when served, including for legacy clients, without changing any v0 API routes.
+`DELETE /session/plugin` clears the browser cookie, requires a same-origin
+request, and does not require a key because it only signs the browser out.
+
 ## Configuration endpoints
 
 All paths below are relative to `/v8/management`.
@@ -99,6 +118,7 @@ retain the corresponding business operation's fields.
 | `/observability/usage/api-keys` | GET | Get API-key usage. |
 | `/observability/usage/queue` | GET | Get queued usage events. |
 | `/credentials` | GET, POST, DELETE | List, upload, or delete credential files. |
+| `/credentials/quota-observations` | GET | Read existing Codex and Claude quota snapshots without querying providers. |
 | `/credentials/models` | GET | Get credential models. |
 | `/credentials/download` | GET | Download a credential file. |
 | `/credentials/status` | PATCH | Change credential status. |
@@ -114,6 +134,16 @@ retain the corresponding business operation's fields.
 | `/plugins/store` | GET | List the plugin store. |
 | `/plugins/store/<id>/install` | POST | Install or update a plugin. |
 | `/plugins/<id>/quota` | GET, POST, DELETE | Read, fetch, or reset plugin quota. |
+| `/plugins/<id>/extension/<path>` | GET, POST, PUT, PATCH, DELETE | Dispatch exact plugin-owned extension routes declared with `ExtensionRoutes` (RPC schema 7). |
+
+`GET /credentials/quota-observations` returns `{observed_at, files}`. Each entry
+contains `id`, `name`, `auth_index`, `provider`, `type`, and
+`quota: {observed_at, signals}`. Only credentials with existing Codex or Claude
+observations are included. This endpoint reads live memory without credential
+file access, upstream requests, or changes to routing state. The bundled
+management bridge polls it every two seconds while visible and authenticated,
+then merges newer observations into the native credential quota cache. Normal
+management-key authorization is required; plugin browser cookies cannot access it.
 
 ## OAuth
 
@@ -160,4 +190,9 @@ layout. `PUT /v0/management/config.yaml` still replaces the complete file and
 accepts legacy, new, or mixed layouts, normalizing v8 documents on save.
 
 Plugin OAuth uses the shared v8 login endpoint. Other plugin-defined HTTP
-extensions retain their declared `/v0/management` routes.
+extensions retain their declared `/v0/management` routes. New plugins can declare
+`ExtensionRoutes`, whose paths resolve under the registration request's
+`ExtensionBasePath` (`/v8/management/plugins/<id>/extension`). These routes share
+the v8 management access controls and cannot register outside their plugin's
+namespace. Public HTML resources still use `/v0/resource/plugins/<id>/`;
+authenticated data and mutations should use the v8 extension routes.

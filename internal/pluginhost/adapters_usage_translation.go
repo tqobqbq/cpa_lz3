@@ -10,6 +10,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/logging"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/thinking"
+	coreexecutor "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/executor"
 	coreusage "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/pluginapi"
 	sdktranslator "github.com/router-for-me/CLIProxyAPI/v8/sdk/translator"
@@ -183,8 +184,16 @@ func (a *usageAdapter) HandleUsage(ctx context.Context, record coreusage.Record)
 	if apiKey == "" {
 		apiKey = strings.TrimSpace(coreusage.APIKeyFromContext(ctx))
 	}
+	clientMeta := logging.GetClientRequestMetadata(ctx)
+	clientIP := strings.TrimSpace(clientMeta.ResolvedClientIP)
+	if clientIP == "" {
+		clientIP = strings.TrimSpace(clientMeta.ClientIP)
+	}
 	plugin.HandleUsage(ctx, pluginapi.UsageRecord{
+		ClientIP:            clientIP,
+		UserAgent:           strings.TrimSpace(clientMeta.UserAgent),
 		RequestID:           requestID,
+		LifecycleRequestID:  coreexecutor.RequestLifecycleIDFromContext(ctx),
 		TraceID:             traceID,
 		Provider:            record.Provider,
 		BaseURL:             record.BaseURL,
@@ -202,6 +211,7 @@ func (a *usageAdapter) HandleUsage(ctx context.Context, record coreusage.Record)
 		Source:              record.Source,
 		ReasoningEffort:     record.ReasoningEffort,
 		ServiceTier:         record.ServiceTier,
+		OutboundServiceTier: record.OutboundServiceTier,
 		ResponseServiceTier: record.ResponseServiceTier,
 		ResponseModel:       record.ResponseModel,
 		Generate:            coreusage.GenerateEnabled(record.Generate),
@@ -222,6 +232,7 @@ func (a *usageAdapter) HandleUsage(ctx context.Context, record coreusage.Record)
 			CacheReadTokens:     record.Detail.CacheReadTokens,
 			CacheCreationTokens: record.Detail.CacheCreationTokens,
 			TotalTokens:         record.Detail.TotalTokens,
+			TokenBreakdown:      record.Detail.TokenBreakdown,
 		},
 		ResponseHeaders: cloneHeader(record.ResponseHeaders),
 	})

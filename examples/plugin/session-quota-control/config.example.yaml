@@ -1,0 +1,45 @@
+# Merge these sections into your existing configuration.
+home:
+  enabled: false
+routing:
+  session-affinity: true
+  session-affinity-ttl: "1h"
+plugins:
+  enabled: true
+  dir: "plugins"
+  configs:
+    session-quota-control:
+      enabled: true
+      priority: 100
+      manual_assignment_enabled: true
+      assignment_wait_seconds: 60
+      quota_pacing_enabled: true
+      safety_margin_percent: 5
+      initial_request_percent: 1
+      model_average_samples: 100
+      concurrency_window_seconds: 300
+      max_pending: 1024
+      usage_report_enabled: true
+      usage_db_path: "~/.cli-proxy-api/session-quota-control/usage.sqlite"
+      evaluation_db_path: "~/.cli-proxy-api/session-quota-control/evaluations.sqlite"
+      credential_waits: {}
+      access_control:
+        credential_rules: {}
+        api_key_rules: {}
+      # Each side uses exactly one mode: blacklist (default) or whitelist.
+      # An empty blacklist allows all; an empty whitelist denies all.
+      # Both sides must permit the credential/key pair. API keys are stored verbatim.
+      # access_control:
+      #   credential_rules:
+      #     "0123456789abcdef":
+      #       mode: whitelist
+      #       entries: ["sk-client-one", "sk-client-two"]
+      #   api_key_rules:
+      #     "sk-client-one":
+      #       mode: blacklist
+      #       entries: ["fedcba9876543210"]
+      # Set rules by the stable auth_index displayed on the dashboard:
+      # credential_waits:
+      #   "0123456789abcdef":
+      #     max_wait_seconds: 120  # null: no cap; 0: no waiting
+      #     fixed_wait_seconds: 30 # null: automatic; 0: immediate

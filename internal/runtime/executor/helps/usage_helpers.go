@@ -21,6 +21,7 @@ import (
 	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/executor"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
+	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -46,6 +47,8 @@ type UsageReporter struct {
 	source              string
 	reasoning           string
 	serviceTier         string
+	outboundTierMu      sync.RWMutex
+	outboundServiceTier string
 	generate            bool
 	stream              bool
 	requestedAt         time.Time
@@ -348,6 +351,52 @@ func (r *UsageReporter) SetTranslatedReasoningEffort(payload []byte, format stri
 		return
 	}
 	r.reasoning = thinking.ExtractTranslatedReasoningEffort(payload, format)
+}
+
+// SetOutboundServiceTier observes the final business payload without changing it.
+// HTTP transports call this immediately before RoundTrip; WebSocket executors
+// call it after payload rules and before transport framing.
+func (r *UsageReporter) SetOutboundServiceTier(payload []byte) {
+	if r == nil {
+		return
+	}
+	tier := ""
+	if gjson.ValidBytes(payload) && gjson.ParseBytes(payload).IsObject() {
+		tier = usage.AutoServiceTier
+		if value := gjson.GetBytes(payload, "service_tier"); value.Type == gjson.String && strings.TrimSpace(value.String()) != "" {
+			tier = strings.TrimSpace(value.String())
+		} else if gjson.GetBytes(payload, "speed").String() == "fast" {
+			tier = "priority"
+		}
+	}
+	r.outboundTierMu.Lock()
+	r.outboundServiceTier = tier
+	r.outboundTierMu.Unlock()
+}
+
+func (r *UsageReporter) outboundTier() string {
+	r.outboundTierMu.RLock()
+	defer r.outboundTierMu.RUnlock()
+	return r.outboundServiceTier
+}
+
+func (r *UsageReporter) observeOutboundHTTPRequest(req *http.Request) {
+	if req.GetBody == nil {
+		return
+	}
+	body, errBody := req.GetBody()
+	if errBody != nil {
+		return
+	}
+	defer func() {
+		if errClose := body.Close(); errClose != nil {
+			log.WithError(errClose).Debug("close usage request body snapshot")
+		}
+	}()
+	payload, errRead := io.ReadAll(body)
+	if errRead == nil {
+		r.SetOutboundServiceTier(payload)
+	}
 }
 
 func (r *UsageReporter) TrackHTTPClient(client *http.Client) *http.Client {
@@ -656,6 +705,7 @@ func (r *UsageReporter) buildRecordForModel(model string, detail usage.Detail, f
 		AuthType:            r.authType,
 		ReasoningEffort:     r.reasoning,
 		ServiceTier:         r.serviceTier,
+		OutboundServiceTier: r.outboundTier(),
 		ResponseServiceTier: strings.TrimSpace(detail.ResponseServiceTier),
 		ResponseModel:       responseModel,
 		Generate:            usage.GenerateFlag(r.generate),
@@ -743,6 +793,7 @@ type usageTTFTRoundTripper struct {
 }
 
 func (t usageTTFTRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	t.reporter.observeOutboundHTTPRequest(req)
 	cliproxyexecutor.MarkUpstreamAttempt(req.Context())
 	t.reporter.StartResponseTTFT()
 	resp, errRoundTrip := t.base.RoundTrip(req)

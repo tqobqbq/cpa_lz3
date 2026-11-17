@@ -1,0 +1,18 @@
+<section class="card">
+  <div class="top"><div><h2>访问控制</h2><small>按具体 Credential／账号与客户端 API key 设置双向限制。两侧均允许时才可调用。</small></div><button id="accessRefresh" type="button" class="secondary">刷新</button></div>
+  <div class="toolbar access-perspectives" role="group" aria-label="配置视角"><button id="accessCredentials" type="button" class="active-tab" aria-pressed="true">按 Credential</button><button id="accessKeys" type="button" class="secondary" aria-pressed="false">按 API key</button></div>
+  <p class="notice">每侧只能选择黑名单或白名单。默认空黑名单允许全部；空白名单拒绝全部。API key 完整显示。</p>
+  <div id="accessMessage" class="dialog-message" role="status"></div>
+  <div class="access-layout">
+    <aside class="access-sidebar"><label for="accessEntitySearch">搜索配置对象</label><input id="accessEntitySearch" type="search" placeholder="账号、Provider、索引或 API key" autocomplete="off"><div id="accessEntities" class="access-entities" role="group" aria-label="配置对象"></div></aside>
+    <div id="accessEmpty" class="empty">连接后选择 Credential 或 API key。</div>
+    <form id="accessEditor" hidden autocomplete="off">
+      <div class="top"><div class="access-identity"><h3 id="accessTitle"></h3><code id="accessIdentity"></code><small id="accessEntityStatus"></small></div><span id="accessDraft" class="draft-indicator"></span></div>
+      <div class="toolbar access-mode"><label for="accessMode">名单模式</label><select id="accessMode"><option value="blacklist">黑名单</option><option value="whitelist">白名单</option></select><span id="accessModeHint" class="muted"></span></div>
+      <div class="toolbar"><input id="accessMemberSearch" type="search" aria-label="搜索名单对象" placeholder="搜索可选对象" autocomplete="off"><button id="accessSelectVisible" type="button" class="secondary">勾选筛选结果</button><button id="accessClear" type="button" class="secondary">清空名单</button><small id="accessMemberCount"></small></div>
+      <div id="accessMembers" class="access-members" role="group" aria-label="名单对象"></div>
+      <div class="form-footer"><small>另一侧的限制同时生效。修改保存后对后续账号选择和执行前复查生效。</small><div class="toolbar"><button id="accessReset" type="button" class="secondary">撤销未保存修改</button><button id="accessSave" type="submit">保存名单</button></div></div>
+      <details class="access-preview" open><summary>最终授权预览（包含当前未保存的草稿）</summary><small>此处显示访问权限；账号的启用状态、模型支持、冷却和额度由调度器另行判断。</small><div class="table-wrap"><table><thead><tr><th>对应对象</th><th>最终授权</th><th>原因</th></tr></thead><tbody id="accessPreview"></tbody></table></div></details>
+    </form>
+  </div>
+</section>

@@ -17,7 +17,10 @@ const (
 	// Version 6 preserves raw JSON bodies for plugin management responses.
 	// Plugins that still require HTML entity escaping on JSON response strings
 	// should keep schema_version < 6.
-	SchemaVersion uint32 = 6
+	// Version 7 adds cold session admission, cancellable waits, passive quota reads,
+	// and authenticated plugin extension routes under the v8 Management API.
+	// Version 8 adds credential candidate filtering and the downstream API key catalog.
+	SchemaVersion uint32 = 8
 	// SchemaVersionStreamChunkOmitRequestBody is the first schema version that omits
 	// request bodies on payload stream-chunk interceptor calls.
 	SchemaVersionStreamChunkOmitRequestBody uint32 = 3
@@ -52,7 +55,10 @@ const (
 	MethodFrontendAuthAuthenticate = "frontend_auth.authenticate"
 
 	// MethodSchedulerPick asks a scheduler plugin to select an auth candidate.
-	MethodSchedulerPick = "scheduler.pick"
+	MethodSchedulerPick        = "scheduler.pick"
+	MethodSessionAffinityAwait = "affinity.await"
+	MethodAuthCandidatesFilter = "auth.candidates_filter"
+	MethodHostAPIKeysList      = "host.api_keys.list"
 	// MethodModelRoute asks a router plugin to select a plugin executor for a matching request.
 	MethodModelRoute = "model.route"
 
@@ -110,6 +116,8 @@ const (
 	MethodHostAuthGetRuntime     = "host.auth.get_runtime"
 	MethodHostAuthSave           = "host.auth.save"
 	MethodHostAffinityLookup     = "host.affinity.lookup"
+	MethodHostContextWait        = "host.context.wait"
+	MethodHostAuthQuota          = "host.auth.quota"
 
 	MethodHostRoutingResetCooldown = "host.routing.reset_cooldown"
 )

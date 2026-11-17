@@ -25,6 +25,8 @@ type rpcCapabilities struct {
 	FrontendAuthProvider          bool                         `json:"frontend_auth_provider"`
 	FrontendAuthProviderExclusive bool                         `json:"frontend_auth_provider_exclusive"`
 	Scheduler                     bool                         `json:"scheduler"`
+	SessionAffinityGate           bool                         `json:"session_affinity_gate"`
+	AuthCandidateFilter           bool                         `json:"auth_candidate_filter"`
 	SchedulerAcrossPriorities     bool                         `json:"scheduler_across_priorities,omitempty"`
 	ModelRouter                   bool                         `json:"model_router"`
 	Executor                      bool                         `json:"executor"`
@@ -93,6 +95,11 @@ type rpcRequestInterceptRequest struct {
 	HostCallbackID string `json:"host_callback_id,omitempty"`
 }
 
+type rpcSessionAffinityRequest struct {
+	pluginapi.SessionAffinityRequest
+	HostCallbackID string `json:"host_callback_id,omitempty"`
+}
+
 type rpcModelRouteRequest struct {
 	pluginapi.ModelRouteRequest
 	HostCallbackID string `json:"host_callback_id,omitempty"`
@@ -129,8 +136,9 @@ type rpcManagementRequest struct {
 }
 
 type rpcManagementRegistrationResponse struct {
-	Routes    []pluginapi.ManagementRoute `json:"routes,omitempty"`
-	Resources []pluginapi.ResourceRoute   `json:"resources,omitempty"`
+	Routes          []pluginapi.ManagementRoute `json:"routes,omitempty"`
+	Resources       []pluginapi.ResourceRoute   `json:"resources,omitempty"`
+	ExtensionRoutes []pluginapi.ManagementRoute `json:"extension_routes,omitempty"`
 }
 
 type rpcQuotaFetchRequest struct {
@@ -167,6 +175,8 @@ func rpcCapabilitiesFromPlugin(plugin pluginapi.Plugin) rpcCapabilities {
 		FrontendAuthProvider:          caps.FrontendAuthProvider != nil,
 		FrontendAuthProviderExclusive: caps.FrontendAuthProvider != nil && caps.FrontendAuthProviderExclusive,
 		Scheduler:                     caps.Scheduler != nil,
+		SessionAffinityGate:           caps.SessionAffinityGate != nil,
+		AuthCandidateFilter:           caps.AuthCandidateFilter != nil,
 		SchedulerAcrossPriorities:     schedulerWantsAcrossPriorities(caps),
 		ModelRouter:                   caps.ModelRouter != nil,
 		Executor:                      caps.Executor != nil,

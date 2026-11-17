@@ -51,6 +51,9 @@ type Record struct {
 	ReasoningEffort string
 	// ServiceTier stores the client-requested service tier.
 	ServiceTier string
+	// OutboundServiceTier stores the final upstream request tier after payload rules.
+	// "auto" means omitted or automatic; empty means the final payload was not observed.
+	OutboundServiceTier string
 	// RequestServiceTier is a deprecated input-only alias retained for existing
 	// plugin callers. It is normalized into ServiceTier and never emitted.
 	RequestServiceTier string

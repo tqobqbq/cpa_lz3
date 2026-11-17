@@ -2458,6 +2458,7 @@ func TestUsageAdapterPropagatesResponseModelServiceTierAndStream(t *testing.T) {
 		Model:               "gpt-5.4",
 		ResponseModel:       "gpt-5.6-luna",
 		ServiceTier:         "default",
+		OutboundServiceTier: "auto",
 		ResponseServiceTier: "priority",
 		Stream:              true,
 	})
@@ -2469,6 +2470,9 @@ func TestUsageAdapterPropagatesResponseModelServiceTierAndStream(t *testing.T) {
 	}
 	if gotRecord.ServiceTier != "default" {
 		t.Fatalf("plugin ServiceTier = %q, want default", gotRecord.ServiceTier)
+	}
+	if gotRecord.OutboundServiceTier != "auto" {
+		t.Fatalf("plugin OutboundServiceTier = %q, want auto", gotRecord.OutboundServiceTier)
 	}
 	if gotRecord.ResponseServiceTier != "priority" {
 		t.Fatalf("plugin ResponseServiceTier = %q, want priority", gotRecord.ResponseServiceTier)
@@ -2491,6 +2495,9 @@ func TestUsageAdapterPropagatesResponseModelServiceTierAndStream(t *testing.T) {
 	}
 	if gotRecord.ResponseServiceTier != "" {
 		t.Fatalf("plugin ResponseServiceTier = %q, want empty", gotRecord.ResponseServiceTier)
+	}
+	if gotRecord.OutboundServiceTier != "" {
+		t.Fatalf("plugin OutboundServiceTier = %q, want empty", gotRecord.OutboundServiceTier)
 	}
 	if gotRecord.Stream {
 		t.Fatalf("plugin Stream = %v, want false", gotRecord.Stream)

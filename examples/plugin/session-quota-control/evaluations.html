@@ -1,0 +1,31 @@
+<dialog id="evaluationDialog" class="evaluation-dialog" aria-labelledby="evaluationTitle">
+  <div class="top">
+    <div><div class="eyebrow">CREDENTIAL EVALUATION</div><h2 id="evaluationTitle">降智检测</h2><p id="evaluationCredential" class="evaluation-subtitle"></p></div>
+    <button id="evaluationClose" class="secondary dialog-close" type="button" aria-label="关闭降智检测">×</button>
+  </div>
+  <div class="top evaluation-heading"><div><h3>检测记录</h3><small>保留最近 100 项已结束的检测；计划中的检测会在服务端执行。</small></div><div class="toolbar"><button id="evaluationRefresh" class="secondary" type="button">刷新记录</button><button id="evaluationNew" type="button" aria-expanded="false" aria-controls="evaluationForm">新增检测</button></div></div>
+  <form id="evaluationForm" class="evaluation-form" hidden>
+    <h3>新增检测</h3>
+    <div class="evaluation-inputs">
+      <label>模型<input id="evaluationModel" list="evaluationModels" value="gpt-6-astra" maxlength="200" required autocomplete="off"><datalist id="evaluationModels"></datalist></label>
+      <label>Effort<select id="evaluationEffort"><option value="none">默认（由 CPA 决定）</option><option value="minimal">minimal</option><option value="low" selected>low</option><option value="medium">medium</option><option value="high">high</option><option value="xhigh">xhigh</option><option value="max">max</option></select></label>
+    </div>
+    <fieldset><legend>检测项目（可多选）</legend><div class="evaluation-options">
+      <label class="evaluation-choice"><input type="checkbox" name="evaluationTest" value="candy"><span><strong>糖果题</strong><small>固定推理题，按原版规则检查答案中的 21</small></span></label>
+      <label class="evaluation-choice"><input type="checkbox" name="evaluationTest" value="fingerprint" checked><span><strong>数字指纹</strong><small>3 道数字挑战，比对模型参考库</small></span></label>
+      <label class="evaluation-choice"><input type="checkbox" name="evaluationTest" value="pelican" checked><span><strong>画鹈鹕</strong><small>生成 HTML / SVG，查看画面与动画</small></span></label>
+    </div></fieldset>
+    <label id="evaluationVariantLabel">画鹈鹕版本<select id="evaluationVariant"><option value="original">原版 · 鹈鹕骑自行车动画</option><option value="all-in-one">多合一 · 飞机、鹈鹕与糖果题</option></select></label>
+    <fieldset><legend>检测时间（可多选）</legend><div id="evaluationTimes" class="evaluation-times">
+      <label><input type="checkbox" name="evaluationDelay" value="0" checked>立即检测</label>
+      <label><input type="checkbox" name="evaluationDelay" value="300" checked>5 分钟后检测</label>
+    </div><div class="evaluation-custom-time"><label>其他延后时间<input id="evaluationDelayMinutes" type="number" min="1" max="1440" step="1" placeholder="分钟" aria-label="其他延后时间（分钟）"></label><button id="evaluationAddTime" class="secondary" type="button">添加时间</button></div><small>时间从提交时开始计算；每个项目在每个所选时间各检测一次，最多选择 8 个时间。</small></fieldset>
+    <div class="form-footer"><div><strong id="evaluationPlanCount">4 项检测 · 预计 8 次模型请求</strong><small class="evaluation-cost">消耗所选 Credential 的额度；失败重试可能增加请求数。</small></div><button id="evaluationCreate" type="submit">创建检测</button></div>
+  </form>
+  <p id="evaluationMessage" class="dialog-message" role="status"></p>
+  <div id="evaluationHistory" class="evaluation-history" aria-live="polite"><div class="empty">正在读取检测记录…</div></div>
+</dialog>
+<dialog id="evaluationDetail" class="evaluation-dialog evaluation-detail" aria-labelledby="evaluationDetailTitle">
+  <div class="top"><div><h2 id="evaluationDetailTitle">检测详情</h2><p id="evaluationDetailMeta" class="evaluation-subtitle"></p></div><button id="evaluationDetailClose" class="secondary dialog-close" type="button" aria-label="关闭检测详情">×</button></div>
+  <div id="evaluationDetailBody"></div>
+</dialog>

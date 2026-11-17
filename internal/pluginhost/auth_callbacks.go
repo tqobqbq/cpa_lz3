@@ -54,10 +54,37 @@ func (h *Host) currentAuthManager() *coreauth.Manager {
 
 func (h *Host) callHostAuthList(ctx context.Context, request []byte) ([]byte, error) {
 	_ = ctx
+	var options pluginapi.HostAuthListRequest
 	if len(bytesTrimSpace(request)) > 0 {
 		var req map[string]any
 		if errUnmarshal := json.Unmarshal(request, &req); errUnmarshal != nil {
 			return nil, fmt.Errorf("decode host auth list request: %w", errUnmarshal)
+		}
+		if errOptions := json.Unmarshal(request, &options); errOptions != nil {
+			return nil, fmt.Errorf("decode host auth list options: %w", errOptions)
+		}
+	}
+	if options.IncludeRuntime {
+		if manager := h.currentAuthManager(); manager != nil {
+			entries := make([]pluginapi.HostAuthFileEntry, 0)
+			for _, auth := range manager.List() {
+				if auth == nil {
+					continue
+				}
+				auth.EnsureIndex()
+				name := strings.TrimSpace(auth.FileName)
+				if name == "" {
+					name = auth.ID
+				}
+				priority, _ := strconv.Atoi(authAttribute(auth, "priority"))
+				entries = append(entries, pluginapi.HostAuthFileEntry{
+					ID: auth.ID, AuthIndex: auth.Index, Name: name, Label: auth.Label,
+					Type: auth.Provider, Provider: auth.Provider, Status: string(auth.Status), Priority: priority,
+					Disabled: auth.Disabled || auth.Status == coreauth.StatusDisabled, Unavailable: auth.Unavailable,
+				})
+			}
+			sort.Slice(entries, func(i, j int) bool { return entries[i].ID < entries[j].ID })
+			return marshalRPCResult(rpcHostAuthListResponse{Files: entries})
 		}
 	}
 	entries, errList := h.listAuthFiles()

@@ -1,0 +1,35 @@
+<form id="hubSettings" class="card hub-settings" autocomplete="off">
+  <div class="top"><div><h2>Hub 配置</h2><small>保存后可在下次打开页面时复用。Authorization 用于管理 Hub，KEY_ID 用于选择待检测的 Key。</small></div><span id="hubDraft" class="draft-indicator"></span></div>
+  <fieldset id="hubFields">
+    <div class="hub-grid">
+      <label class="hub-wide">Authorization<input name="authorization" type="password" placeholder="粘贴 Authorization / Bearer Token" autocomplete="new-password"><small id="hubAuthorizationStatus">尚未保存</small></label>
+      <label>KEY_ID<input name="key_id" type="number" min="1" max="9007199254740991" step="1" placeholder="例如 825"></label>
+      <label>检测模型<input name="model" list="hubModels" maxlength="200" placeholder="gpt-6-astra"><datalist id="hubModels"></datalist></label>
+      <label>Effort<select name="effort"><option value="none">默认</option><option value="minimal">minimal</option><option value="low" selected>low</option><option value="medium">medium</option><option value="high">high</option><option value="xhigh">xhigh</option><option value="max">max</option></select></label>
+      <label>请求协议<select name="protocol"><option value="auto">自动（Claude 模型用 Messages，其余用 Responses）</option><option value="codex">Codex / Responses</option><option value="claude">Claude / Messages</option></select></label>
+    </div>
+    <details class="hub-advanced"><summary>接口与连接设置</summary><div class="hub-grid">
+      <label class="hub-wide">GraphQL 地址<input name="graphql_url" type="url" required value="https://hub.linux.do/admin/graphql"></label>
+      <label class="hub-wide">模型接口 Base URL<input name="api_base_url" type="url" required value="https://hub.oaifree.com"></label>
+      <label>Project ID<input name="project_id" type="number" min="1" max="9007199254740991" step="1" required value="1"></label>
+      <label>代理<input name="proxy_url" placeholder="留空使用环境代理，或填写代理 URL / direct"></label>
+      <label class="hub-wide">Cookie（需要时填写）<input name="cookie" type="password" autocomplete="new-password" placeholder="留空保留已保存的 Cookie"><small id="hubCookieStatus"></small></label>
+    </div><div class="toolbar"><label><input name="clear_authorization" type="checkbox">清除已保存的 Authorization</label><label><input name="clear_cookie" type="checkbox">清除已保存的 Cookie</label></div></details>
+  </fieldset>
+  <div class="form-footer"><small>Token 保存在服务端，页面只显示是否已配置。</small><button id="hubSave" type="submit">保存配置</button></div>
+</form>
+<div id="hubMessage" class="dialog-message" role="status"></div>
+<div id="hubRecovery" class="notice" hidden><div class="top"><strong>上次绑定操作尚未处理完成</strong><button id="hubRecover" type="button">恢复 / 核对绑定</button></div><p>完成恢复后可继续查找、检测或应用。Authorization 过期时可先更新并保存。</p><details><summary>查看恢复记录</summary><pre id="hubRecoveryDetails"></pre></details></div>
+<section class="card">
+  <div class="top"><div><h2>查找免费渠道</h2><small>读取公开且启用、已知价格全部为零的渠道。查找完成后按需选择检测。</small></div><div class="toolbar"><button id="hubDiscover" type="button">查找免费渠道</button><button id="hubLoadKey" class="secondary" type="button">读取 Key 当前渠道</button></div></div>
+  <div class="hub-channel-tools"><label>模型筛选关键词<input id="hubFilter" maxlength="200" placeholder="留空显示全部，例如 gpt-5.5"></label><button id="hubSelect" class="secondary" type="button">勾选当前筛选</button><button id="hubClear" class="secondary" type="button">清空选择</button><small id="hubChannelsMeta"></small></div>
+  <div class="table-wrap hub-channel-table"><table><thead><tr><th>选择</th><th>渠道</th><th>支持模型</th><th>标签</th></tr></thead><tbody id="hubChannels"></tbody></table></div>
+</section>
+<section class="card">
+  <div class="top"><div><h2>检测渠道模型可用性</h2><small>使用插件降智检测中的数字指纹，每个渠道执行 3 道挑战；同一 Key 逐个渠道检测。</small></div><button id="hubDetect" type="button">检测所选渠道</button></div>
+  <label class="hub-id-label">待检测渠道 ID<input id="hubChannelIDs" placeholder="勾选上方渠道，或直接输入 ID，以逗号、空格分隔"></label>
+  <small id="hubPlan">选择渠道后显示预计请求数。</small>
+  <p class="notice">检测期间会临时修改该 Key 的渠道绑定，结束或取消后恢复原配置。完整检测且模型一致的渠道可通过下方按钮手动应用。关闭页面后检测仍会继续。</p>
+  <div class="top"><span id="hubOperation" role="status"></span><button id="hubCancel" class="secondary" type="button" hidden>取消当前操作</button></div>
+</section>
+<section class="card"><div class="top"><h2>检测记录</h2><button id="hubRefresh" class="secondary" type="button">刷新</button></div><small>保留最近 10 批检测，详情与插件降智检测共用。</small><div id="hubHistory" class="evaluation-history"></div></section>

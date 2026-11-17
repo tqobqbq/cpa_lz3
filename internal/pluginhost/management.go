@@ -92,6 +92,19 @@ func (h *Host) RegisterManagementRoutes(ctx context.Context, reserved map[string
 				log.Warnf("pluginhost: plugin %s declared invalid resource route %s", record.id, item.Path)
 			}
 		}
+		for _, item := range resp.ExtensionRoutes {
+			method, path, valid := normalizeExtensionRoute(record.id, item)
+			if !valid {
+				log.WithField("plugin_id", record.id).Warn("pluginhost: invalid v8 extension route")
+				continue
+			}
+			key := managementRouteKey(method, path)
+			if _, exists := nextRoutes[key]; exists {
+				continue
+			}
+			item.Method, item.Path = method, path
+			nextRoutes[key] = managementRouteRecord{pluginID: record.id, path: record.path, version: record.version, schemaVersion: record.plugin.SchemaVersion, route: item}
+		}
 	}
 
 	h.mu.Lock()
@@ -112,10 +125,33 @@ func (h *Host) callManagementRegistrar(ctx context.Context, record capabilityRec
 		}
 	}()
 	return plugin.RegisterManagement(ctx, pluginapi.ManagementRegistrationRequest{
-		Plugin:           record.meta,
-		BasePath:         managementBasePath,
-		ResourceBasePath: resourcePluginBasePath + "/" + record.id,
+		Plugin:            record.meta,
+		BasePath:          managementBasePath,
+		ResourceBasePath:  resourcePluginBasePath + "/" + record.id,
+		ExtensionBasePath: "/v8/management/plugins/" + record.id + "/extension",
 	})
+}
+
+func normalizeExtensionRoute(pluginID string, item pluginapi.ManagementRoute) (string, string, bool) {
+	method := strings.ToUpper(strings.TrimSpace(item.Method))
+	if method == "" {
+		method = http.MethodGet
+	}
+	switch method {
+	case http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
+	default:
+		return "", "", false
+	}
+	base := "/v8/management/plugins/" + pluginID + "/extension"
+	path := strings.TrimSpace(item.Path)
+	if strings.HasPrefix(path, "/v8/management/") && !strings.HasPrefix(path, base+"/") {
+		return "", "", false
+	}
+	path = strings.TrimPrefix(path, base)
+	if item.Handler == nil || !strings.HasPrefix(path, "/") || path == "/" || strings.ContainsAny(path, " \t\r\n:*?#\\") || strings.Contains(path, "..") || strings.Contains(path, "//") {
+		return "", "", false
+	}
+	return method, base + strings.TrimRight(path, "/"), true
 }
 
 func normalizeManagementRoute(item pluginapi.ManagementRoute) (string, string, bool) {

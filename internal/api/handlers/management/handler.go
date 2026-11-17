@@ -61,6 +61,7 @@ type Handler struct {
 	pluginStoreHTTPClient   pluginstore.HTTPDoer
 	pluginStoreRateLimiter  *pluginstore.GitHubRateLimiter
 	pluginReleases          pluginReleaseCache
+	pluginBrowserSession    pluginBrowserSession
 }
 
 type configReloadSnapshot struct {
@@ -269,6 +270,10 @@ func (h *Handler) SetPostAuthPersistHook(hook coreauth.PostAuthHook) {
 // All requests (local and remote) require a valid management key.
 // Additionally, remote access requires allow-remote-management=true.
 func (h *Handler) Middleware() gin.HandlerFunc {
+	return h.middleware(false)
+}
+
+func (h *Handler) middleware(browserSessions bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("X-CPA-VERSION", buildinfo.Version)
 		c.Header("X-CPA-COMMIT", buildinfo.Commit)
@@ -291,11 +296,26 @@ func (h *Handler) Middleware() gin.HandlerFunc {
 		if provided == "" {
 			provided = c.GetHeader("X-Management-Key")
 		}
+		fromSession := false
+		if browserSessions && provided == "" && pluginSessionPath(c.Request.URL.Path) {
+			provided = h.pluginSessionKey(c.Request)
+			if provided == "" {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "management login required"})
+				return
+			}
+			fromSession = true
+		}
 
 		allowed, statusCode, errMsg := h.AuthenticateManagementKey(clientIP, localClient, provided)
 		if !allowed {
+			if fromSession && statusCode == http.StatusUnauthorized {
+				h.clearPluginSession(c)
+			}
 			c.AbortWithStatusJSON(statusCode, gin.H{"error": errMsg})
 			return
+		}
+		if browserSessions && !fromSession {
+			h.issuePluginSession(c, provided)
 		}
 		c.Next()
 	}

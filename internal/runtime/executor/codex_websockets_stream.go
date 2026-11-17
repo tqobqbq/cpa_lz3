@@ -49,6 +49,7 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 	optimizeMultiAgentV2 := prepared.optimizeMultiAgentV2
 	multiAgentV2Conflict := prepared.multiAgentV2Conflict
 	reporter.SetTranslatedReasoningEffort(clientBody, to.String())
+	reporter.SetOutboundServiceTier(clientBody)
 
 	var authID, authLabel, authType, authValue string
 	authID = auth.ID

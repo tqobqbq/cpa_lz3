@@ -12,8 +12,23 @@ bin/*
 conv/*
 temp/*
 refs/*
-plugins/*
+# Versioned plugin artifacts; runtime data and backups stay ignored.
+/plugins/*
+!/plugins/linux/
+/plugins/linux/*
+!/plugins/linux/amd64/
+/plugins/linux/amd64/*
+!/plugins/linux/amd64/cliproxy-costs-v0.1.1.so
+!/plugins/linux/amd64/codex-invite-v0.2.0.so
+!/plugins/linux/amd64/cpa-usage-statistics-v0.6.3.so
+!/plugins/linux/amd64/cpa-usage-stats-v0.8.2.so
+!/plugins/linux/amd64/session-quota-control.so
+!/plugins/linux/amd64/usage-report-v0.4.0.so
+!/plugins/linux/amd64/usage-statistics-v0.2.0.so
+!/plugins/linux/amd64/session-quota-control.h
 examples/plugin/bin/*
+/data/
+/test-output
 
 # Storage backends
 pgstore/*
@@ -67,3 +82,14 @@ docker-compose.override.yml
 
 # Local LLM Wiki vault
 .llm-wiki
+
+# Local hub credentials and generated results
+/hub/authorization.txt
+/hub/cookie.txt
+/hub/free_*.json
+/hub/update.log
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/

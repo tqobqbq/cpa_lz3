@@ -101,6 +101,7 @@ func (e *CodexWebsocketsExecutor) Execute(ctx context.Context, auth *cliproxyaut
 	}
 	body = finalizePayload(body)
 	reporter.SetTranslatedReasoningEffort(body, to.String())
+	reporter.SetOutboundServiceTier(body)
 	wsHeaders = applyCodexWebsocketHeaders(ctx, wsHeaders, auth, apiKey, e.cfg, nativeRequest, opts.Headers)
 	applyCodexRoutingHint(ctx, wsHeaders, auth, baseModel, body, opts.Headers)
 	applyModelHeaderOverrides(wsHeaders, baseModel)

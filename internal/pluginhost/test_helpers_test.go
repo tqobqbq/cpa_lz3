@@ -56,6 +56,19 @@ func (l *testSymbolLookup) Call(ctx context.Context, method string, request []by
 		return l.callLifecycle(request, false)
 	case pluginabi.MethodPluginReconfigure:
 		return l.callLifecycle(request, true)
+	case pluginabi.MethodAuthCandidatesFilter:
+		if l.active.Capabilities.AuthCandidateFilter == nil {
+			return nil, fmt.Errorf("missing credential access filter")
+		}
+		var req pluginapi.AuthCandidateFilterRequest
+		if errUnmarshal := json.Unmarshal(request, &req); errUnmarshal != nil {
+			return nil, errUnmarshal
+		}
+		resp, errFilter := l.active.Capabilities.AuthCandidateFilter.FilterAuthCandidates(ctx, req)
+		if errFilter != nil {
+			return nil, errFilter
+		}
+		return marshalRPCResult(resp)
 	case pluginabi.MethodThinkingIdentifier:
 		if l.active.Capabilities.ThinkingApplier == nil {
 			return nil, fmt.Errorf("missing thinking applier")
